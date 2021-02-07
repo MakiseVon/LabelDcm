@@ -44,15 +44,7 @@ def getDcmImgAndMdInfo(imgDir: str):
         '性别': dcm.PatientSex, '体重': dcm.PatientWeight, '检查开始日期': toDate(dcm.StudyDate),
         '检查日期': toDate(dcm.SeriesDate), '检查时患者年龄': toAge(dcm.PatientAge), '检查部位': dcm.BodyPartExamined
     }
-    mdInfo = ''
-    first = True
-    for key, val in info.items():
-        if first:
-            first = False
-        else:
-            mdInfo += '---\n\n'
-        mdInfo += key + ': ' + str(val) + '\n\n'
-    return img, mdInfo
+    return img, '---\n\n'.join([f'{key}: {val}\n\n' for key, val in info.items()])
 
 # Windows 10
 # SystemDrive:\HomePath\Pictures\

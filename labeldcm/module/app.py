@@ -4,8 +4,8 @@ from labeldcm.module.mode import LabelMode
 from labeldcm.ui.form import Ui_Form
 from PyQt5.QtCore import pyqtBoundSignal, QCoreApplication, QEvent, QObject, QPointF, QRectF, QSize, Qt
 from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QMouseEvent, QPainter, QPen, QPixmap, QResizeEvent
-from PyQt5.QtWidgets import QAction, QFileDialog, QGraphicsScene, QInputDialog, \
-    QMainWindow, QMenu, QMessageBox, QStatusBar
+from PyQt5.QtWidgets import QAction, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMenu, QMessageBox, \
+                            QStatusBar
 from typing import Dict, Optional, Set, Tuple
 
 class LabelApp(QMainWindow, Ui_Form):
@@ -15,7 +15,7 @@ class LabelApp(QMainWindow, Ui_Form):
         self.retranslateUi(self)
 
         # qss设置
-        with open('labeldcm/assets/style.qss', 'r', encoding='utf-8') as f:
+        with open('labeldcm/source/style.qss', 'r', encoding='utf-8') as f:
             self.setStyleSheet(f.read())
 
         # 初始化颜色单选框
@@ -95,7 +95,7 @@ class LabelApp(QMainWindow, Ui_Form):
         mdInfo = ''
         for index in pivots:
             point = self.getSrcPoint(self.points[index][0])
-            mdInfo += '{}: ({}, {})\n\n'.format(index, round(point.x(), 2), round(point.y(), 2))
+            mdInfo += f'{index}: ({round(point.x(), 2)}, {round(point.y(), 2)})\n\n'
         self.pivotsInfo.setMarkdown(mdInfo)
 
     # 初始化画布
@@ -339,7 +339,7 @@ class LabelApp(QMainWindow, Ui_Form):
         painter.setFont(font)
         for (indexA, indexB), color in self.lines.items():
             isHighlight = indexA in self.highlightPoints and indexB in self.highlightPoints \
-                and (self.mode == LabelMode.AngleMode or self.mode == LabelMode.VerticalMode)
+                          and (self.mode == LabelMode.AngleMode or self.mode == LabelMode.VerticalMode)
             pen.setColor(QColor.lighter(color) if isHighlight else color)
             painter.setPen(pen)
             A = self.points[indexA][0]
@@ -409,7 +409,7 @@ class LabelApp(QMainWindow, Ui_Form):
         pen.setWidthF(config.lineWidth if not toSrc else config.lineWidth * self.ratioToSrc)
         for (indexA, indexB), color in self.circles.items():
             isHighlight = indexA in self.highlightPoints and indexB in self.highlightPoints \
-                and self.mode == LabelMode.CircleMode
+                          and self.mode == LabelMode.CircleMode
             pen.setColor(QColor.lighter(color) if isHighlight else color)
             painter.setPen(pen)
             A = self.points[indexA][0]
@@ -472,7 +472,7 @@ class LabelApp(QMainWindow, Ui_Form):
 
     def isPointOutOfBound(self, point: QPointF):
         return point.x() < config.pointWidth / 2 or point.x() > self.img.width() - config.pointWidth / 2 \
-            or point.y() < config.pointWidth / 2 or point.y() > self.img.height() - config.pointWidth / 2
+               or point.y() < config.pointWidth / 2 or point.y() > self.img.height() - config.pointWidth / 2
 
     # 得到有效标号数量
     def getIndexCnt(self):

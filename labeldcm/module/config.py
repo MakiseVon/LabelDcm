@@ -29,16 +29,7 @@ class Config(object):
         # 1. Default
         self.defaultColor = 'red'
         # 2. List
-        self.colorList = [
-            'red',
-            'green',
-            'blue',
-            'cyan',
-            'yellow',
-            'black',
-            'white',
-            'gray'
-        ]
+        self.colorList = ['red', 'green', 'blue', 'cyan', 'yellow', 'black', 'white', 'gray']
 
         # Ratio
         # 1. Angle
