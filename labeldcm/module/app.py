@@ -32,6 +32,7 @@ class LabelApp(QMainWindow, Ui_Form):
         # 初始化画布，原图，现图，现图/原图，原图/现图
         self.src: Optional[QPixmap] = None
         self.img: Optional[QPixmap] = None
+        self.path: Optional[str] = None
         self.ratioFromOld = 1
         self.ratioToSrc = 1
 
@@ -102,6 +103,7 @@ class LabelApp(QMainWindow, Ui_Form):
     def initImg(self):
         self.src = None
         self.img = None
+        self.path = None
         self.ratioFromOld = 1
         self.ratioToSrc = 1
         self.patientInfo.setMarkdown('')
@@ -128,19 +130,24 @@ class LabelApp(QMainWindow, Ui_Form):
         self.imgView.setScene(scene)
 
     # DICOM (*.dcm),得到dicom文件的pixmap和内含信息
-    def loadDcmImg(self, imgDir: str):
-        if static.isImgAccess(imgDir):
-            self.src, mdInfo = static.getDcmImgAndMdInfo(imgDir)
+    def loadDcmImg(self, imgPath: str):
+        if static.isImgAccess(imgPath):
+            self.src, mdInfo = static.getDcmImgAndMdInfo(imgPath)
+            self.path = imgPath
+            if path := imgPath.split('.'):
+                if path[-1].lower() == 'dcm':
+                    self.path = f'{imgPath[:-4]}.jpg'
             self.patientInfo.setMarkdown(mdInfo)
             self.updateAll()
         else:
             self.warning('The image file is not found or unreadable!')
 
     # JPEG (*.jpg;*.jpeg;*.jpe), PNG (*.png)
-    def loadImg(self, imgDir: str):
-        if static.isImgAccess(imgDir):
+    def loadImg(self, imgPath: str):
+        if static.isImgAccess(imgPath):
             self.src = QPixmap()
-            self.src.load(imgDir)
+            self.src.load(imgPath)
+            self.path = imgPath
             self.updateAll()
         else:
             self.warning('The image file is not found or unreadable!')
@@ -150,14 +157,14 @@ class LabelApp(QMainWindow, Ui_Form):
         caption = 'Open Image File'
         extFilter = 'DICOM (*.dcm);;JPEG (*.jpg;*.jpeg;*.jpe);;PNG (*.png)'
         dcmFilter = 'DICOM (*.dcm)'
-        imgDir, imgExt = QFileDialog.getOpenFileName(self, caption, static.getHomeImgDir(), extFilter, dcmFilter)
-        if not imgDir:
+        imgPath, imgExt = QFileDialog.getOpenFileName(self, caption, static.getHomeImgDir(), extFilter, dcmFilter)
+        if not imgPath:
             return None
         self.initAll()
         if imgExt == dcmFilter:
-            self.loadDcmImg(imgDir)
+            self.loadDcmImg(imgPath)
         else:
-            self.loadImg(imgDir)
+            self.loadImg(imgPath)
 
     # 保存结果
     def saveImg(self):
@@ -169,9 +176,9 @@ class LabelApp(QMainWindow, Ui_Form):
         caption = 'Save Image File'
         extFilter = 'JPEG (*.jpg;*.jpeg;*.jpe);;PNG (*.png)'
         initFilter = 'JPEG (*.jpg;*.jpeg;*.jpe)'
-        imgDir, _ = QFileDialog.getSaveFileName(self, caption, static.getHomeImgDir(), extFilter, initFilter)
-        if imgDir:
-            img.save(imgDir)
+        imgPath, _ = QFileDialog.getSaveFileName(self, caption, self.path, extFilter, initFilter)
+        if imgPath:
+            img.save(imgPath)
 
     # 初始化颜色单选框
     def initColorBox(self):

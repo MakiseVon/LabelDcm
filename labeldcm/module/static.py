@@ -7,8 +7,8 @@ from pydicom import dcmread
 from PyQt5.QtCore import QPointF, QRectF
 
 # 判断文件是否可读
-def isImgAccess(imgDir: str):
-    return os.access(imgDir, os.R_OK)
+def isImgAccess(imgPath: str):
+    return os.access(imgPath, os.R_OK)
 
 def toDate(date: str):
     return date[0:4] + '年' + date[4:6] + '月' + date[6:8] + '日'
@@ -32,8 +32,8 @@ def toAge(age: str):
     return str1
 
 # 得到dcm文件的qpixmap和包含的信息
-def getDcmImgAndMdInfo(imgDir: str):
-    dcm = dcmread(imgDir)
+def getDcmImgAndMdInfo(imgPath: str):
+    dcm = dcmread(imgPath)
     low = numpy.min(dcm.pixel_array)
     upp = numpy.max(dcm.pixel_array)
     # 16 Bit -> 8 Bit
