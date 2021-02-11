@@ -1,7 +1,7 @@
-from labeldcm.module import static
-from labeldcm.module.config import config
-from labeldcm.module.mode import LabelMode
-from labeldcm.ui.form import Ui_Form
+from module import static
+from module.config import config
+from module.mode import LabelMode
+from ui.form import Ui_Form
 from PyQt5.QtCore import pyqtBoundSignal, QCoreApplication, QEvent, QObject, QPointF, QRectF, QSize, Qt
 from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QMouseEvent, QPainter, QPen, QPixmap, QResizeEvent
 from PyQt5.QtWidgets import QAction, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMenu, QMessageBox, \
@@ -15,8 +15,8 @@ class LabelApp(QMainWindow, Ui_Form):
         self.retranslateUi(self)
 
         # qss设置
-        with open('labeldcm/source/style.qss', 'r', encoding='utf-8') as f:
-            self.setStyleSheet(f.read())
+        with open('source/style.qss', 'r', encoding='utf-8') as file:
+            self.setStyleSheet(file.read())
 
         # 初始化颜色单选框
         self.initColorBox()

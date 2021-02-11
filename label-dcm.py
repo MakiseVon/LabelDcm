@@ -1,5 +1,5 @@
 if __name__ == '__main__':
-    from labeldcm.module.app import LabelApp
+    from module.app import LabelApp
     from PyQt5.QtWidgets import QApplication
     import sys
     app = QApplication(sys.argv)

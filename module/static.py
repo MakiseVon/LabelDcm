@@ -1,4 +1,4 @@
-from labeldcm.module.config import config
+from module.config import config
 import math
 import numpy
 import os

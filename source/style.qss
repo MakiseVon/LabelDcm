@@ -14,7 +14,7 @@ QSlider::groove:horizontal {
 /* 设置中间的那个滑动的键 */
 QSlider::handle:horizontal {
     border: 0;
-    border-image: url(labeldcm/source/button.png);
+    border-image: url(source/button.png);
     width: 15px;
     margin: -7px -7px -7px -7px;
 }
