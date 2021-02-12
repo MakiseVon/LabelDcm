@@ -22,47 +22,34 @@ class LabelApp(QMainWindow, Ui_Form):
         self.mode = LabelMode.defaultMode
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
-
         # Init Image Size
         self.imgSize = 1
-
         # Init Image
         self.src: Optional[QPixmap] = None
         self.img: Optional[QPixmap] = None
         self.path: Optional[str] = None
-        # new / old
         self.ratioFromOld = 1
-        # src / img
         self.ratioToSrc = 1
-
         # Init Events
         self.targetEventType = [QMouseEvent.MouseButtonPress, QMouseEvent.MouseMove, QMouseEvent.MouseButtonRelease]
         self.init_event_connections()
-
         # Init Indexs
         self.indexA = -1
         self.indexB = -1
         self.indexC = -1
-
         # A: IndexA - A, Color
         self.points: Dict[int, Tuple[QPointF, QColor]] = {}
-
         # AB: IndexA, IndexB - Color
         self.lines: Dict[Tuple[int, int], QColor] = {}
-
         # ∠ABC: IndexA, IndexB, IndexC - Color
         self.angles: Dict[Tuple[int, int, int], QColor] = {}
-
         # ⊙A, r = AB: IndexA, IndexB - Color
         self.circles: Dict[Tuple[int, int], QColor] = {}
-
         # Init Pivots
         self.pivots: Set[int] = set()
-
         # Init Highlight
         self.highlightMoveIndex = -1
         self.highlightPoints: Set[int] = set()
-
         # Init Right Button Menu
         self.rightBtnMenu = QMenu(self)
 
