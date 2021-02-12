@@ -220,7 +220,7 @@
     </property>
     <addaction name="loadImgBtn"/>
     <addaction name="deleteImgBtn"/>
-    <addaction name="storeImgBtn"/>
+    <addaction name="saveImgBtn"/>
     <addaction name="separator"/>
     <addaction name="quitAppBtn"/>
    </widget>
@@ -228,11 +228,11 @@
     <property name="title">
      <string>编辑</string>
     </property>
-    <addaction name="addSizeBtn"/>
-    <addaction name="subSizeBtn"/>
-    <addaction name="originalSizeBtn"/>
+    <addaction name="incSizeBtn"/>
+    <addaction name="decSizeBtn"/>
+    <addaction name="resetSizeBtn"/>
     <addaction name="clearAllBtn"/>
-    <addaction name="aiBtn"/>
+    <addaction name="autoAddPtsBtn"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -248,11 +248,11 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="addSizeBtn"/>
+   <addaction name="incSizeBtn"/>
    <addaction name="separator"/>
-   <addaction name="subSizeBtn"/>
+   <addaction name="decSizeBtn"/>
    <addaction name="separator"/>
-   <addaction name="originalSizeBtn"/>
+   <addaction name="resetSizeBtn"/>
   </widget>
   <action name="loadImgBtn">
    <property name="text">
@@ -270,7 +270,7 @@
     <string>Ctrl+Z</string>
    </property>
   </action>
-  <action name="storeImgBtn">
+  <action name="saveImgBtn">
    <property name="text">
     <string>保存</string>
    </property>
@@ -291,22 +291,22 @@
     <string>清除全部</string>
    </property>
   </action>
-  <action name="addSizeBtn">
+  <action name="incSizeBtn">
    <property name="text">
     <string>放大</string>
    </property>
   </action>
-  <action name="subSizeBtn">
+  <action name="decSizeBtn">
    <property name="text">
     <string>缩小</string>
    </property>
   </action>
-  <action name="originalSizeBtn">
+  <action name="resetSizeBtn">
    <property name="text">
     <string>还原</string>
    </property>
   </action>
-  <action name="aiBtn">
+  <action name="autoAddPtsBtn">
    <property name="text">
     <string>自动判断</string>
    </property>

@@ -31,6 +31,10 @@ class Config(object):
         # 2. List
         self.colorList = ['red', 'green', 'blue', 'cyan', 'yellow', 'black', 'white', 'gray']
 
+        # Action
+        self.defaultAction = '无操作'
+        self.actionList = ['无操作', '点', '线', '角度', '圆', '中点', '直角', '移动点', '删除点']
+
         # Ratio
         # 1. Angle
         # For ∠ABC, the radius of the degree is
@@ -44,14 +48,16 @@ class Config(object):
         # Debug
         self.debug = True
 
-        # 操作列表
-        self.defaultAction = '无操作'
-        self.actionList = ['无操作', '点', '线', '角度', '圆', '中点', '直角', '移动点', '删除点']
+    class ConstException(Exception):
+        pass
 
     def __setattr__(self, key, value):
         if key in self.__dict__:
             raise self.ConstException
         self.__dict__[key] = value
+
+    class ScopeException(Exception):
+        pass
 
     def __getattr__(self, item):
         if item in self.__dict__:
