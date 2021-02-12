@@ -1,2 +1,2 @@
-# Label Dcm
+# Label DCM
 A simple dicom label tool
