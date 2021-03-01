@@ -19,6 +19,9 @@ class Config(object):
         # Action
         self.defaultAction = '无操作'
         self.actionList = ['无操作', '点', '线', '角度', '圆', '中点', '直角', '移动点', '删除点']
+        # Indent
+        # For JSON
+        self.indent = 2
         # Ratio
         # For ∠ABC, the radius of the degree is r = min(AB, AC) * ratioToRadius
         self.ratioToRadius = 0.2

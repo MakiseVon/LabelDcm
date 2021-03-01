@@ -218,9 +218,18 @@
     <property name="title">
      <string>文件</string>
     </property>
+    <widget class="QMenu" name="menu_3">
+     <property name="title">
+      <string>导出</string>
+     </property>
+     <addaction name="exportAllBtn"/>
+     <addaction name="exportPivotsBtn"/>
+    </widget>
     <addaction name="loadImgBtn"/>
     <addaction name="deleteImgBtn"/>
     <addaction name="saveImgBtn"/>
+    <addaction name="importBtn"/>
+    <addaction name="menu_3"/>
     <addaction name="separator"/>
     <addaction name="quitAppBtn"/>
    </widget>
@@ -267,7 +276,7 @@
     <string>删除</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Z</string>
+    <string>Ctrl+D</string>
    </property>
   </action>
   <action name="saveImgBtn">
@@ -309,6 +318,30 @@
   <action name="autoAddPtsBtn">
    <property name="text">
     <string>自动判断</string>
+   </property>
+  </action>
+  <action name="importBtn">
+   <property name="text">
+    <string>导入</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="exportAllBtn">
+   <property name="text">
+    <string>全部</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="exportPivotsBtn">
+   <property name="text">
+    <string>关键点</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
    </property>
   </action>
  </widget>

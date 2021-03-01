@@ -1,3 +1,4 @@
+import json
 from module.config import config
 import math
 import numpy
@@ -6,8 +7,14 @@ from PIL import Image
 from pydicom import dcmread
 from PyQt5.QtCore import QPointF, QRectF
 
-def is_img_access(imgPath: str):
-    return os.access(imgPath, os.R_OK)
+def is_file_exists(path: str):
+    return os.path.exists(path)
+
+def is_file_readable(path: str):
+    return os.access(path, os.R_OK)
+
+def is_file_writable(path: str):
+    return os.access(path, os.W_OK)
 
 def to_date(date: str):
     return date[0:4] + '年' + date[4:6] + '月' + date[6:8] + '日'
@@ -53,6 +60,14 @@ def get_home_img_dir():
         if homePath := os.getenv('HomePath'):
             homeImgDir = os.path.join(homeImgDir, homePath, 'Pictures')
     return homeImgDir
+
+def load_from_json(path):
+    with open(path, 'r') as file:
+        return json.load(file)
+
+def save_json_file(data: dict, path: str):
+    with open(path, 'w') as file:
+        json.dump(data, file, indent=config.indent)
 
 def get_index_shift(A: QPointF):
     return QPointF(A.x() + config.indexShifting, A.y() - config.indexShifting)
