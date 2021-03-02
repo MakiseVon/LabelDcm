@@ -34,9 +34,9 @@ class LabelApp(QMainWindow, Ui_Form):
         self.targetEventType = [QMouseEvent.MouseButtonPress, QMouseEvent.MouseMove, QMouseEvent.MouseButtonRelease]
         self.init_event_connections()
         # Init Indexs
-        self.indexA = -1
-        self.indexB = -1
-        self.indexC = -1
+        self.indexA: Optional[int] = None
+        self.indexB: Optional[int] = None
+        self.indexC: Optional[int] = None
         # A: IndexA - A, Color
         self.points: Dict[int, Tuple[QPointF, QColor]] = {}
         # AB: IndexA, IndexB - Color
@@ -48,7 +48,7 @@ class LabelApp(QMainWindow, Ui_Form):
         # Init Pivots
         self.pivots: Set[int] = set()
         # Init Highlight
-        self.highlightMoveIndex = -1
+        self.highlightMoveIndex: Optional[int] = None
         self.highlightPoints: Set[int] = set()
         # Init Right Button Menu
         self.rightBtnMenu = QMenu(self)
@@ -103,12 +103,12 @@ class LabelApp(QMainWindow, Ui_Form):
         self.patientInfo.setMarkdown('')
 
     def reset_index(self):
-        self.indexA = -1
-        self.indexB = -1
-        self.indexC = -1
+        self.indexA = None
+        self.indexB = None
+        self.indexC = None
 
     def reset_highlight(self):
-        self.highlightMoveIndex = -1
+        self.highlightMoveIndex = None
         self.highlightPoints.clear()
 
     def reset_except_img(self):
@@ -318,10 +318,9 @@ class LabelApp(QMainWindow, Ui_Form):
 
     def get_point_index(self, point: QPointF):
         if not self.img or not self.points:
-            return -1
+            return None
         distance = config.pointWidth - config.eps
-        # Index -1 means the point does not exist
-        index = -1
+        index = None
         for idx, (pt, _) in self.points.items():
             dis = static.get_distance(point, pt)
             if dis < distance:
@@ -334,26 +333,26 @@ class LabelApp(QMainWindow, Ui_Form):
                or point.y() < config.pointWidth / 2 or point.y() > self.img.height() - config.pointWidth / 2
 
     def get_index_cnt(self):
-        return len([i for i in [self.indexA, self.indexB, self.indexC] if i != -1])
+        return len([i for i in [self.indexA, self.indexB, self.indexC] if i])
 
     def trigger_index(self, index: int):
-        if not self.img or not self.points or index == -1:
+        if not self.img or not self.points or not index:
             return None
         if index in [self.indexA, self.indexB, self.indexC]:
             indexs = [i for i in [self.indexA, self.indexB, self.indexC] if i != index]
             self.indexA = indexs[0]
             self.indexB = indexs[1]
-            self.indexC = -1
-            self.highlightPoints.remove(index)
+            self.indexC = None
+            self.highlightPoints.remove(abs(index))
         else:
-            indexs = [i for i in [self.indexA, self.indexB, self.indexC] if i != -1]
+            indexs = [i for i in [self.indexA, self.indexB, self.indexC] if i]
             indexs.append(index)
             while len(indexs) < 3:
-                indexs.append(-1)
+                indexs.append(None)
             self.indexA = indexs[0]
             self.indexB = indexs[1]
             self.indexC = indexs[2]
-            self.highlightPoints.add(index)
+            self.highlightPoints.add(abs(index))
 
     def end_trigger(self):
         self.reset_index()
@@ -385,7 +384,7 @@ class LabelApp(QMainWindow, Ui_Form):
         if self.img and indexA in self.points and indexB in self.points:
             self.circles[(indexA, indexB)] = self.color
 
-    def erase_point(self, index):
+    def erase_point(self, index: int):
         if index not in self.points:
             return None
         del self.points[index]
@@ -401,8 +400,9 @@ class LabelApp(QMainWindow, Ui_Form):
         self.pivots.discard(index)
 
     def erase_highlight(self):
-        if self.mode == LabelMode.circleMode:
-            self.erase_point(self.indexB)
+        for index in [self.indexA, self.indexB, self.indexC]:
+            if index and index < 0:
+                self.erase_point(-index)
         self.reset_index()
         self.reset_highlight()
         self.update_all()
@@ -412,7 +412,7 @@ class LabelApp(QMainWindow, Ui_Form):
             return None
         point = self.imgView.mapToScene(evt.pos())
         index = self.get_point_index(point)
-        if index == -1:
+        if not index:
             self.add_new_point(point)
         else:
             self.points[index] = self.points[index][0], self.color
@@ -423,10 +423,12 @@ class LabelApp(QMainWindow, Ui_Form):
             return None
         point = self.imgView.mapToScene(evt.pos())
         index = self.get_point_index(point)
-        self.trigger_index(self.add_new_point(point) if index == -1 else index)
+        self.trigger_index(index if index else -self.add_new_point(point))
         if self.get_index_cnt() == 2:
-            self.add_line(self.indexA, self.indexB)
-            self.end_trigger_with(self.indexB)
+            indexA = abs(self.indexA)
+            indexB = abs(self.indexB)
+            self.add_line(indexA, indexB)
+            self.end_trigger_with(indexB)
         self.update_all()
 
     def handle_angle_mode(self, evt: QMouseEvent):
@@ -450,17 +452,18 @@ class LabelApp(QMainWindow, Ui_Form):
         if evt.type() == QMouseEvent.MouseButtonPress and evt.button() == Qt.LeftButton:
             if self.get_index_cnt() == 0:
                 index = self.get_point_index(point)
-                self.trigger_index(self.add_new_point(point) if index == -1 else index)
+                self.trigger_index(index if index else -self.add_new_point(point))
                 self.trigger_index(
-                    self.add_new_point(QPointF(point.x() + 2 * config.eps, point.y() + 2 * config.eps))
+                    -self.add_new_point(QPointF(point.x() + 2 * config.eps, point.y() + 2 * config.eps))
                 )
-                self.add_circle(self.indexA, self.indexB)
+                self.add_circle(abs(self.indexA), abs(self.indexB))
             elif self.get_index_cnt() == 2:
-                self.end_trigger_with(self.indexB)
+                self.end_trigger_with(abs(self.indexB))
         elif evt.type() == QMouseEvent.MouseMove and self.get_index_cnt() == 2 \
                 and not self.is_point_out_of_bound(point):
-            self.points[self.indexB][0].setX(point.x())
-            self.points[self.indexB][0].setY(point.y())
+            indexB = abs(self.indexB)
+            self.points[indexB][0].setX(point.x())
+            self.points[indexB][0].setY(point.y())
         self.update_all()
 
     def handle_midpoint_mode(self, evt: QMouseEvent):
@@ -522,7 +525,7 @@ class LabelApp(QMainWindow, Ui_Form):
 
     def handle_erase_point_mode(self, evt: QMouseEvent):
         index = self.get_point_index(self.imgView.mapToScene(evt.pos()))
-        if evt.type() == QMouseEvent.MouseButtonPress and evt.button() == Qt.LeftButton and index != -1:
+        if evt.type() == QMouseEvent.MouseButtonPress and evt.button() == Qt.LeftButton:
             self.erase_point(index)
         self.update_all()
 
