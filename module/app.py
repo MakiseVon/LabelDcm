@@ -52,6 +52,8 @@ class LabelApp(QMainWindow, Ui_Form):
         self.highlightPoints: Set[int] = set()
         # Init Right Button Menu
         self.rightBtnMenu = QMenu(self)
+        # Init Image Dir
+        self.dir: Optional[str] = None
 
     def init_color_box(self):
         size = self.colorBox.iconSize()
@@ -667,9 +669,10 @@ class LabelApp(QMainWindow, Ui_Form):
 
     def upload_img(self):
         caption = '新建'
+        initDir = self.dir if self.dir else static.get_home_img_dir()
         extFilter = 'DICOM (*.dcm);;JPEG (*.jpg;*.jpeg;*.jpe);;PNG (*.png)'
         dcmFilter = 'DICOM (*.dcm)'
-        imgPath, imgExt = QFileDialog.getOpenFileName(self, caption, static.get_home_img_dir(), extFilter, dcmFilter)
+        imgPath, imgExt = QFileDialog.getOpenFileName(self, caption, initDir, extFilter, dcmFilter)
         if not imgPath:
             return None
         self.reset_all()
@@ -677,6 +680,7 @@ class LabelApp(QMainWindow, Ui_Form):
             self.load_dcm_img(imgPath)
         else:
             self.load_img(imgPath)
+        self.dir = static.get_parent_dir(imgPath)
 
     def delete_img(self):
         if not self.src:

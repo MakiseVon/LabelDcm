@@ -4,8 +4,10 @@ import math
 import numpy
 import os
 from PIL import Image
-from pydicom import dcmread
+from pydicom import dcmread, FileDataset
+from pydicom.dicomdir import DicomDir
 from PyQt5.QtCore import QPointF, QRectF
+from typing import Optional, Union
 
 def is_file_exists(path: str):
     return os.path.exists(path)
@@ -16,10 +18,27 @@ def is_file_readable(path: str):
 def is_file_writable(path: str):
     return os.access(path, os.W_OK)
 
-def to_date(date: str):
-    return date[0:4] + '年' + date[4:6] + '月' + date[6:8] + '日'
+def get_attr(dcm: Union[FileDataset, DicomDir], name: str):
+    if not hasattr(dcm, name):
+        return None
+    attr = str(getattr(dcm, name)).strip(' \t\n\r')
+    return attr if attr else None
 
-def to_age(age: str):
+def to_date(date: Optional[str]):
+    return date[0:4] + '年' + date[4:6] + '月' + date[6:8] + '日' if date else None
+
+def to_sex(sex: Optional[str]):
+    if not sex:
+        return None
+    sex = sex.lower()
+    if sex == 'm' or sex == 'male':
+        return '男'
+    if sex == 'f' or sex == 'female':
+        return '女'
+
+def to_age(age: Optional[str]):
+    if not age:
+        return None
     res: str = ''
     if age[0] != '0':
         res = age[0:3]
@@ -45,10 +64,15 @@ def get_dcm_img_and_md_info(imgPath: str):
     mat = numpy.floor_divide(dcm.pixel_array, (upp - low + 1) / 256)
     img = Image.fromarray(mat.astype(numpy.uint8)).toqpixmap()
     info = {
-        '患者ID': dcm.PatientID, '姓名': dcm.PatientName, '出生日期': to_date(dcm.PatientBirthDate),
-        '性别': dcm.PatientSex, '体重': dcm.PatientWeight, '检查开始日期': to_date(dcm.StudyDate),
-        '检查日期': to_date(dcm.SeriesDate), '检查时患者年龄': to_age(dcm.PatientAge), '检查部位': dcm.BodyPartExamined
+        '患者ID': get_attr(dcm, 'PatientID'), '姓名': get_attr(dcm, 'PatientName'),
+        '出生日期': to_date(get_attr(dcm, 'PatientBirthDate')), '性别': to_sex(get_attr(dcm, 'PatientSex')),
+        '体重': get_attr(dcm, 'PatientWeigh'), '检查开始日期': to_date(get_attr(dcm, 'StudyDate')),
+        '检查日期': to_date(get_attr(dcm, 'SeriesDate')), '检查时患者年龄': to_age(get_attr(dcm, 'PatientAge')),
+        '检查部位': get_attr(dcm, 'BodyPartExamined')
     }
+    for attr in info.keys():
+        if not info[attr]:
+            info[attr] = '（不详）'
     return img, '---\n\n'.join([f'{key}: {val}\n\n' for key, val in info.items()])
 
 # Windows 10
@@ -60,6 +84,9 @@ def get_home_img_dir():
         if homePath := os.getenv('HomePath'):
             homeImgDir = os.path.join(homeImgDir, homePath, 'Pictures')
     return homeImgDir
+
+def get_parent_dir(path: str):
+    return os.path.dirname(os.path.abspath(path))
 
 def load_from_json(path):
     with open(path, 'r') as file:
