@@ -30,6 +30,8 @@ class LabelApp(QMainWindow, Ui_Form):
         self.path: Optional[str] = None
         self.ratioFromOld = 1
         self.ratioToSrc = 1
+        # Init Pixel Spacing
+        self.pixelSpacing: Optional[Tuple[float, float]] = None
         # Init Events
         self.targetEventType = [QMouseEvent.MouseButtonPress, QMouseEvent.MouseMove, QMouseEvent.MouseButtonRelease]
         self.init_event_connections()
@@ -99,6 +101,7 @@ class LabelApp(QMainWindow, Ui_Form):
     def reset_img(self):
         self.src = None
         self.img = None
+        self.pixelSpacing = None
         self.path = None
         self.ratioFromOld = 1
         self.ratioToSrc = 1
@@ -217,8 +220,14 @@ class LabelApp(QMainWindow, Ui_Form):
             else:
                 painter.drawLine(A, B)
                 labelPoint = static.get_midpoint(A, B)
+            realA = srcA
+            realB = srcB
+            if self.pixelSpacing:
+                realA = QPointF(srcA.x() * self.pixelSpacing[0], srcA.y() * self.pixelSpacing[1])
+                realB = QPointF(srcB.x() * self.pixelSpacing[0], srcB.y() * self.pixelSpacing[1])
             painter.drawText(
-                static.get_distance_shift(A, B, labelPoint), str(round(static.get_distance(srcA, srcB), 2))
+                static.get_distance_shift(A, B, labelPoint),
+                str(round(static.get_distance(realA, realB), 2)) + ('mm' if self.pixelSpacing else 'px')
             )
         painter.end()
 
@@ -647,7 +656,7 @@ class LabelApp(QMainWindow, Ui_Form):
     # DICOM (*.dcm)
     def load_dcm_img(self, imgPath: str):
         if static.is_file_readable(imgPath):
-            self.src, mdInfo = static.get_dcm_img_and_md_info(imgPath)
+            self.src, mdInfo, self.pixelSpacing = static.get_dcm_img_with_info(imgPath)
             self.path = imgPath
             if path := imgPath.split('.'):
                 if path[-1].lower() == 'dcm':

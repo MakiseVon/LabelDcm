@@ -56,7 +56,7 @@ def to_age(age: Optional[str]):
         return res + '天'
     return res
 
-def get_dcm_img_and_md_info(imgPath: str):
+def get_dcm_img_with_info(imgPath: str):
     dcm = dcmread(imgPath)
     low = numpy.min(dcm.pixel_array)
     upp = numpy.max(dcm.pixel_array)
@@ -73,7 +73,8 @@ def get_dcm_img_and_md_info(imgPath: str):
     for attr in info.keys():
         if not info[attr]:
             info[attr] = '（不详）'
-    return img, '---\n\n'.join([f'{key}: {val}\n\n' for key, val in info.items()])
+    pixelSpacing = (dcm.PixelSpacing[0], dcm.PixelSpacing[1]) if hasattr(dcm, 'PixelSpacing') else None
+    return img, '---\n\n'.join([f'{key}: {val}\n\n' for key, val in info.items()]), pixelSpacing
 
 # Windows 10
 # SystemDrive:\HomePath\Pictures\
