@@ -657,10 +657,7 @@ class LabelApp(QMainWindow, Ui_Form):
     def load_dcm_img(self, imgPath: str):
         if static.is_file_readable(imgPath):
             self.src, mdInfo, self.pixelSpacing = static.get_dcm_img_with_info(imgPath)
-            self.path = imgPath
-            if path := imgPath.split('.'):
-                if path[-1].lower() == 'dcm':
-                    self.path = f'{imgPath[:-4]}.jpg'
+            self.path = static.rename_path_ext(imgPath, '.jpg')
             self.patientInfo.setMarkdown(mdInfo)
             self.update_all()
         else:

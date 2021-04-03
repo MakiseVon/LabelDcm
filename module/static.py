@@ -76,6 +76,9 @@ def get_dcm_img_with_info(imgPath: str):
     pixelSpacing = (dcm.PixelSpacing[0], dcm.PixelSpacing[1]) if hasattr(dcm, 'PixelSpacing') else None
     return img, '---\n\n'.join([f'{key}: {val}\n\n' for key, val in info.items()]), pixelSpacing
 
+def rename_path_ext(path: str, ext: str):
+    return os.path.splitext(path)[0] + ext
+
 # Windows 10
 # SystemDrive:\HomePath\Pictures\
 def get_home_img_dir():
