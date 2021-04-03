@@ -398,16 +398,16 @@ class LabelApp(QMainWindow, Ui_Form):
     def erase_point(self, index: int):
         if index not in self.points:
             return None
-        del self.points[index]
+        self.points.pop(index)
         for line in list(self.lines.keys()):
             if index in line:
-                del self.lines[line]
+                self.lines.pop(line)
         for angle in list(self.angles.keys()):
             if index in angle:
-                del self.angles[angle]
+                self.angles.pop(angle)
         for circle in list(self.circles.keys()):
             if index in circle:
-                del self.circles[circle]
+                self.circles.pop(circle)
         self.pivots.discard(index)
 
     def erase_highlight(self):
@@ -559,12 +559,12 @@ class LabelApp(QMainWindow, Ui_Form):
             self.warning('此标号已存在！')
             return None
         self.points[newIndex] = self.points[index]
-        del self.points[index]
+        self.points.pop(index)
         for line in list(self.lines.keys()):
             if index in line:
                 fixedIndex = line[0] + line[1] - index
                 self.lines[static.get_line_key(newIndex, fixedIndex)] = self.lines[line]
-                del self.lines[line]
+                self.lines.pop(line)
         for angle in list(self.angles.keys()):
             if index in angle:
                 if index == angle[1]:
@@ -572,14 +572,14 @@ class LabelApp(QMainWindow, Ui_Form):
                 else:
                     fixedIndex = angle[0] + angle[2] - index
                     self.angles[static.get_angle_key(newIndex, angle[1], fixedIndex)] = self.angles[angle]
-                del self.angles[angle]
+                self.angles.pop(angle)
         for circle in list(self.circles.keys()):
             if index in circle:
                 if index == circle[0]:
                     self.circles[(newIndex, circle[1])] = self.circles[circle]
                 else:
                     self.circles[(circle[0], newIndex)] = self.circles[circle]
-                del self.circles[circle]
+                self.circles.pop(circle)
         if index in self.pivots:
             self.pivots.remove(index)
             self.pivots.add(newIndex)
