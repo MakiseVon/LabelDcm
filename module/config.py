@@ -29,20 +29,14 @@ class Config(object):
         self.eps = 1e-5
         self.base = 2 ** 7
 
-    class ScopeException(Exception):
-        pass
-
     def __getattr__(self, item):
         if item in self.__dict__:
             return self.item
-        raise self.ScopeException
-
-    class ConstException(Exception):
-        pass
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
     def __setattr__(self, key, value):
         if key in self.__dict__:
-            raise self.ConstException
+            raise AttributeError("can't set attribute")
         self.__dict__[key] = value
 
 config = Config()
