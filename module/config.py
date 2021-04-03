@@ -15,10 +15,10 @@ class Config(object):
         self.angleWidth = 2
         # Color
         self.defaultColor = 'red'
-        self.colorList = ['red', 'green', 'blue', 'cyan', 'yellow', 'black', 'white', 'gray']
+        self.colorList = ('red', 'green', 'blue', 'cyan', 'yellow', 'black', 'white', 'gray')
         # Action
         self.defaultAction = '无操作'
-        self.actionList = ['无操作', '点', '线', '角度', '圆', '中点', '直角', '移动点', '删除点']
+        self.actionList = ('无操作', '点', '线', '角度', '圆', '中点', '直角', '移动点', '删除点')
         # Indent
         # For JSON
         self.indent = 2
@@ -29,14 +29,6 @@ class Config(object):
         self.eps = 1e-5
         self.base = 2 ** 7
 
-    class ConstException(Exception):
-        pass
-
-    def __setattr__(self, key, value):
-        if key in self.__dict__:
-            raise self.ConstException
-        self.__dict__[key] = value
-
     class ScopeException(Exception):
         pass
 
@@ -44,5 +36,13 @@ class Config(object):
         if item in self.__dict__:
             return self.item
         raise self.ScopeException
+
+    class ConstException(Exception):
+        pass
+
+    def __setattr__(self, key, value):
+        if key in self.__dict__:
+            raise self.ConstException
+        self.__dict__[key] = value
 
 config = Config()
