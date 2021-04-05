@@ -63,13 +63,13 @@ def get_dcm_img_with_info(imgPath: str):
     # 16 Bit -> 8 Bit
     mat = numpy.floor_divide(dcm.pixel_array, (upp - low + 1) / 256)
     img = Image.fromarray(mat.astype(numpy.uint8)).toqpixmap()
-    info = {
-        '患者ID': get_attr(dcm, 'PatientID'), '姓名': get_attr(dcm, 'PatientName'),
-        '出生日期': to_date(get_attr(dcm, 'PatientBirthDate')), '性别': to_sex(get_attr(dcm, 'PatientSex')),
-        '体重': get_attr(dcm, 'PatientWeigh'), '检查开始日期': to_date(get_attr(dcm, 'StudyDate')),
-        '检查日期': to_date(get_attr(dcm, 'SeriesDate')), '检查时患者年龄': to_age(get_attr(dcm, 'PatientAge')),
-        '检查部位': get_attr(dcm, 'BodyPartExamined')
-    }
+    info = dict(
+        患者ID=get_attr(dcm, 'PatientID'), 姓名=get_attr(dcm, 'PatientName'),
+        出生日期=to_date(get_attr(dcm, 'PatientBirthDate')), 性别=to_sex(get_attr(dcm, 'PatientSex')),
+        体重=get_attr(dcm, 'PatientWeigh'), 检查开始日期=to_date(get_attr(dcm, 'StudyDate')),
+        检查日期=to_date(get_attr(dcm, 'SeriesDate')), 检查时患者年龄=to_age(get_attr(dcm, 'PatientAge')),
+        检查部位=get_attr(dcm, 'BodyPartExamined')
+    )
     for attr in info.keys():
         if not info[attr]:
             info[attr] = '（不详）'

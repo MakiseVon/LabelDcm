@@ -763,7 +763,7 @@ class LabelApp(QMainWindow, Ui_Form):
         if static.is_file_exists(jsonPath) and not static.is_file_writable(jsonPath):
             self.warning('JSON 文件不可读！')
             return None
-        data = {'points': [], 'lines': [], 'angles': [], 'circles': [], 'pivots': []}
+        data = dict(points=[], lines=[], angles=[], circles=[], pivots=[])
         points: List[Tuple[int, float, float, str]] = data['points']
         for index, point in self.points.items():
             srcPoint = self.get_src_point(point[0])
@@ -795,7 +795,7 @@ class LabelApp(QMainWindow, Ui_Form):
         if static.is_file_exists(jsonPath) and not static.is_file_writable(jsonPath):
             self.warning('JSON 文件不可读！')
             return None
-        data = {'pivots': []}
+        data = dict(pivots=[])
         pivots: List[Tuple[int, float, float]] = data['pivots']
         for index in self.pivots:
             point = self.get_src_point(self.points[index][0])
