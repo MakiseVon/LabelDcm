@@ -19,9 +19,9 @@ def is_file_writable(path: str):
     return os.access(path, os.W_OK)
 
 def get_attr(dcm: Union[FileDataset, DicomDir], name: str):
-    if not hasattr(dcm, name):
-        return None
-    attr = str(getattr(dcm, name)).strip(' \t\n\r')
+    attr = getattr(dcm, name, None)
+    if attr is not None:
+        attr = str(attr).strip(' \t\n\r')
     return attr if attr else None
 
 def to_date(date: Optional[str]):
