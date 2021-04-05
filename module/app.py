@@ -173,7 +173,6 @@ class LabelApp(QMainWindow, Ui_Form):
             font.setPointSizeF(config.fontSize)
         painter.setFont(font)
         for index, (point, color) in self.points.items():
-            labelPoint: QPointF
             if toSrc:
                 pen.setColor(color)
                 labelPoint = self.get_src_point(point)
@@ -213,7 +212,6 @@ class LabelApp(QMainWindow, Ui_Form):
             B = self.points[indexB][0]
             srcA = self.get_src_point(A)
             srcB = self.get_src_point(B)
-            labelPoint: QPointF
             if toSrc:
                 painter.drawLine(srcA, srcB)
                 labelPoint = static.get_midpoint(srcA, srcB)
@@ -255,9 +253,6 @@ class LabelApp(QMainWindow, Ui_Form):
             C = self.points[indexC][0]
             D, E = static.get_diag_points(self.points[indexA][0], B, C)
             F = static.get_arc_midpoint(A, B, C)
-            labelRect: QRectF
-            labelPointA: QPointF
-            labelPointB: QPointF
             if toSrc:
                 labelRect = QRectF(self.get_src_point(D), self.get_src_point(E))
                 labelPointA = self.get_src_point(B)
@@ -575,10 +570,8 @@ class LabelApp(QMainWindow, Ui_Form):
                 self.angles.pop(angle)
         for circle in list(self.circles.keys()):
             if index in circle:
-                if index == circle[0]:
-                    self.circles[(newIndex, circle[1])] = self.circles[circle]
-                else:
-                    self.circles[(circle[0], newIndex)] = self.circles[circle]
+                key = (newIndex, circle[1]) if index == circle[0] else (circle[0], newIndex)
+                self.circles[key] = self.circles[circle]
                 self.circles.pop(circle)
         if index in self.pivots:
             self.pivots.remove(index)
@@ -593,10 +586,7 @@ class LabelApp(QMainWindow, Ui_Form):
             self.pivots.discard(index)
 
     def switch_pivot_state(self, index: int):
-        if index not in self.pivots:
-            self.add_pivots(index)
-        else:
-            self.remove_pivots(index)
+        self.remove_pivots(index) if index in self.pivots else self.add_pivots(index)
 
     def create_right_btn_menu(self, index: int, point: QPointF):
         self.rightBtnMenu = QMenu(self)
@@ -682,10 +672,7 @@ class LabelApp(QMainWindow, Ui_Form):
         if not imgPath:
             return None
         self.reset_all()
-        if imgExt == dcmFilter:
-            self.load_dcm_img(imgPath)
-        else:
-            self.load_img(imgPath)
+        self.load_dcm_img(imgPath) if imgExt == dcmFilter else self.load_img(imgPath)
         self.dir = static.get_parent_dir(imgPath)
 
     def delete_img(self):
@@ -835,26 +822,24 @@ class LabelApp(QMainWindow, Ui_Form):
     def switch_mode(self):
         self.erase_highlight()
         text = config.actionList[self.actionBox.currentIndex()]
-        mode: LabelMode
         if text == '点':
-            mode = LabelMode.pointMode
+            self.mode = LabelMode.pointMode
         elif text == '线':
-            mode = LabelMode.lineMode
+            self.mode = LabelMode.lineMode
         elif text == '角度':
-            mode = LabelMode.angleMode
+            self.mode = LabelMode.angleMode
         elif text == '圆':
-            mode = LabelMode.circleMode
+            self.mode = LabelMode.circleMode
         elif text == '中点':
-            mode = LabelMode.midpointMode
+            self.mode = LabelMode.midpointMode
         elif text == '直角':
-            mode = LabelMode.verticalMode
+            self.mode = LabelMode.verticalMode
         elif text == '移动点':
-            mode = LabelMode.movePointMode
+            self.mode = LabelMode.movePointMode
         elif text == '删除点':
-            mode = LabelMode.erasePointMode
+            self.mode = LabelMode.erasePointMode
         else:
-            mode = LabelMode.defaultMode
-        self.mode = mode
+            self.mode = LabelMode.defaultMode
 
     def set_img_size_slider(self):
         size = self.imgSizeSlider.value()

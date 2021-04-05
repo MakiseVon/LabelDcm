@@ -39,22 +39,22 @@ def to_sex(sex: Optional[str]):
 def to_age(age: Optional[str]):
     if not age:
         return None
-    res: str = ''
     if age[0] != '0':
-        res = age[0:3]
+        num = age[0:3]
     elif age[1] != '0':
-        res = age[1:3]
+        num = age[1:3]
     elif age[2] != '0':
-        res = age[2]
+        num = age[2]
+    else:
+        return None
     if age[3] == 'Y':
-        return res + '岁'
+        return num + '岁'
     elif age[3] == 'M':
-        return res + '月'
+        return num + '月'
     elif age[3] == 'W':
-        return res + '周'
+        return num + '周'
     elif age[3] == 'D':
-        return res + '天'
-    return res
+        return num + '天'
 
 def get_dcm_img_with_info(imgPath: str):
     dcm = dcmread(imgPath)
