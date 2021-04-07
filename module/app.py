@@ -14,7 +14,7 @@ class LabelApp(QMainWindow, Ui_form):
         # init UI
         self.setupUi(self)
         self.retranslateUi(self)
-        with open('source/style.qss', 'r', encoding='utf-8') as file:
+        with open('static/style.qss', 'r', encoding='utf-8') as file:
             self.setStyleSheet(file.read())
         self.init_color_box()
         self.color = QColor(config.default_color)
