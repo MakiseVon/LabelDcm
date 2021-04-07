@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QMainWindow" name="Form">
+ <class>form</class>
+ <widget class="QMainWindow" name="form">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1600</width>
+    <width>1745</width>
     <height>900</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
-       <widget class="QGraphicsView" name="imgView">
+       <widget class="QGraphicsView" name="img_view">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>1</horstretch>
@@ -48,7 +48,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="colorBox">
+           <widget class="QComboBox" name="color_box">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>1</horstretch>
@@ -72,7 +72,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="actionBox">
+           <widget class="QComboBox" name="action_box">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>1</horstretch>
@@ -86,7 +86,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QLabel" name="imgSizeLabel">
+           <widget class="QLabel" name="img_size_label">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
               <horstretch>3</horstretch>
@@ -105,7 +105,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QSlider" name="imgSizeSlider">
+           <widget class="QSlider" name="img_size_slider">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>7</horstretch>
@@ -159,7 +159,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QTextEdit" name="patientInfo">
+           <widget class="QTextEdit" name="patient_info">
             <property name="enabled">
              <bool>true</bool>
             </property>
@@ -185,7 +185,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QTextEdit" name="pivotsInfo">
+           <widget class="QTextEdit" name="pivots_info">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>1</horstretch>
@@ -210,7 +210,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1600</width>
+     <width>1745</width>
      <height>26</height>
     </rect>
    </property>
@@ -222,32 +222,32 @@
      <property name="title">
       <string>导出</string>
      </property>
-     <addaction name="exportAllBtn"/>
-     <addaction name="exportPivotsBtn"/>
+     <addaction name="export_all_btn"/>
+     <addaction name="export_pivots_btn"/>
     </widget>
-    <addaction name="loadImgBtn"/>
-    <addaction name="deleteImgBtn"/>
-    <addaction name="saveImgBtn"/>
-    <addaction name="importBtn"/>
+    <addaction name="load_img_btn"/>
+    <addaction name="delete_img_btn"/>
+    <addaction name="save_img_btn"/>
+    <addaction name="import_btn"/>
     <addaction name="menu_3"/>
     <addaction name="separator"/>
-    <addaction name="quitAppBtn"/>
+    <addaction name="quit_app_btn"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
      <string>编辑</string>
     </property>
-    <addaction name="incSizeBtn"/>
-    <addaction name="decSizeBtn"/>
-    <addaction name="resetSizeBtn"/>
-    <addaction name="clearAllBtn"/>
-    <addaction name="autoAddPtsBtn"/>
+    <addaction name="inc_size_btn"/>
+    <addaction name="dec_size_btn"/>
+    <addaction name="reset_size_btn"/>
+    <addaction name="clear_all_btn"/>
+    <addaction name="auto_add_pts_btn"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBar">
+  <widget class="QToolBar" name="tool_bar">
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -257,13 +257,13 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="incSizeBtn"/>
+   <addaction name="inc_size_btn"/>
    <addaction name="separator"/>
-   <addaction name="decSizeBtn"/>
+   <addaction name="dec_size_btn"/>
    <addaction name="separator"/>
-   <addaction name="resetSizeBtn"/>
+   <addaction name="reset_size_btn"/>
   </widget>
-  <action name="loadImgBtn">
+  <action name="load_img_btn">
    <property name="text">
     <string>新建</string>
    </property>
@@ -271,7 +271,7 @@
     <string>Ctrl+N</string>
    </property>
   </action>
-  <action name="deleteImgBtn">
+  <action name="delete_img_btn">
    <property name="text">
     <string>删除</string>
    </property>
@@ -279,7 +279,7 @@
     <string>Ctrl+D</string>
    </property>
   </action>
-  <action name="saveImgBtn">
+  <action name="save_img_btn">
    <property name="text">
     <string>保存</string>
    </property>
@@ -287,7 +287,7 @@
     <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="quitAppBtn">
+  <action name="quit_app_btn">
    <property name="text">
     <string>退出</string>
    </property>
@@ -295,32 +295,32 @@
     <string>Ctrl+F4</string>
    </property>
   </action>
-  <action name="clearAllBtn">
+  <action name="clear_all_btn">
    <property name="text">
     <string>清除全部</string>
    </property>
   </action>
-  <action name="incSizeBtn">
+  <action name="inc_size_btn">
    <property name="text">
     <string>放大</string>
    </property>
   </action>
-  <action name="decSizeBtn">
+  <action name="dec_size_btn">
    <property name="text">
     <string>缩小</string>
    </property>
   </action>
-  <action name="resetSizeBtn">
+  <action name="reset_size_btn">
    <property name="text">
     <string>还原</string>
    </property>
   </action>
-  <action name="autoAddPtsBtn">
+  <action name="auto_add_pts_btn">
    <property name="text">
     <string>自动判断</string>
    </property>
   </action>
-  <action name="importBtn">
+  <action name="import_btn">
    <property name="text">
     <string>导入</string>
    </property>
@@ -328,7 +328,7 @@
     <string>Ctrl+I</string>
    </property>
   </action>
-  <action name="exportAllBtn">
+  <action name="export_all_btn">
    <property name="text">
     <string>全部</string>
    </property>
@@ -336,7 +336,7 @@
     <string>Ctrl+A</string>
    </property>
   </action>
-  <action name="exportPivotsBtn">
+  <action name="export_pivots_btn">
    <property name="text">
     <string>关键点</string>
    </property>

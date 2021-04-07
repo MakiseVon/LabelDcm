@@ -1,120 +1,120 @@
-from module import static
+from module import utils
 from module.config import config
 from module.mode import LabelMode
-from ui.form import Ui_Form
+from ui.form import Ui_form
 from PyQt5.QtCore import pyqtBoundSignal, QCoreApplication, QEvent, QObject, QPointF, QRectF, QSize, Qt
 from PyQt5.QtGui import QColor, QCursor, QFont, QIcon, QMouseEvent, QPainter, QPen, QPixmap, QResizeEvent
 from PyQt5.QtWidgets import QAction, QFileDialog, QGraphicsScene, QInputDialog, QMainWindow, QMenu, QMessageBox, \
                             QStatusBar
 from typing import Dict, List, Optional, Set, Tuple
 
-class LabelApp(QMainWindow, Ui_Form):
+class LabelApp(QMainWindow, Ui_form):
     def __init__(self):
-        super(LabelApp, self).__init__()
-        # Init UI
+        super().__init__()
+        # init UI
         self.setupUi(self)
         self.retranslateUi(self)
         with open('source/style.qss', 'r', encoding='utf-8') as file:
             self.setStyleSheet(file.read())
         self.init_color_box()
-        self.color = QColor(config.defaultColor)
+        self.color = QColor(config.default_color)
         self.init_action_box()
-        self.mode = LabelMode.defaultMode
-        self.statusBar = QStatusBar()
-        self.setStatusBar(self.statusBar)
-        # Init Image Size
-        self.imgSize = 1
-        # Init Image
+        self.mode = LabelMode.DEFAULT_MODE
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        # init image size
+        self.img_size = 1
+        # init image
         self.src: Optional[QPixmap] = None
         self.img: Optional[QPixmap] = None
         self.path: Optional[str] = None
-        self.ratioFromOld = 1
-        self.ratioToSrc = 1
-        # Init Pixel Spacing
-        self.pixelSpacing: Optional[Tuple[float, float]] = None
-        # Init Events
-        self.targetEventType = [QMouseEvent.MouseButtonPress, QMouseEvent.MouseMove, QMouseEvent.MouseButtonRelease]
+        self.ratio_from_old = 1
+        self.ratio_to_src = 1
+        # init pixel spacing
+        self.pixel_spacing: Optional[Tuple[float, float]] = None
+        # init events
+        self.target_event_type = [QMouseEvent.MouseButtonPress, QMouseEvent.MouseMove, QMouseEvent.MouseButtonRelease]
         self.init_event_connections()
-        # Init Indexs
-        self.indexA: Optional[int] = None
-        self.indexB: Optional[int] = None
-        self.indexC: Optional[int] = None
-        # A: IndexA - A, Color
+        # init indexs
+        self.index_a: Optional[int] = None
+        self.index_b: Optional[int] = None
+        self.index_c: Optional[int] = None
+        # a: index_a - a, color
         self.points: Dict[int, Tuple[QPointF, QColor]] = {}
-        # AB: IndexA, IndexB - Color
+        # ab: index_a, index_b - color
         self.lines: Dict[Tuple[int, int], QColor] = {}
-        # ∠ABC: IndexA, IndexB, IndexC - Color
+        # ∠abc: index_a, index_b, index_c - color
         self.angles: Dict[Tuple[int, int, int], QColor] = {}
-        # ⊙A, r = AB: IndexA, IndexB - Color
+        # ⊙a, r = ab: index_a, index_b - color
         self.circles: Dict[Tuple[int, int], QColor] = {}
-        # Init Pivots
+        # init pivots
         self.pivots: Set[int] = set()
-        # Init Highlight
-        self.highlightMoveIndex: Optional[int] = None
-        self.highlightPoints: Set[int] = set()
-        # Init Right Button Menu
-        self.rightBtnMenu = QMenu(self)
-        # Init Image Dir
+        # init highlight
+        self.highlight_move_index: Optional[int] = None
+        self.highlight_points: Set[int] = set()
+        # init right button menu
+        self.right_btn_menu = QMenu(self)
+        # init image dir
         self.dir: Optional[str] = None
 
     def init_color_box(self):
-        size = self.colorBox.iconSize()
         index = 0
-        defaultIndex = -1
-        for color in config.colorList:
-            if color == config.defaultColor:
-                defaultIndex = index
-            colorIcon = QPixmap(size)
-            colorIcon.fill(QColor(color))
-            self.colorBox.addItem(QIcon(colorIcon), f'  {color.capitalize()}')
+        size = self.color_box.iconSize()
+        default_index = -1
+        for color in config.color_list:
+            if color == config.default_color:
+                default_index = index
+            color_icon = QPixmap(size)
+            color_icon.fill(QColor(color))
+            self.color_box.addItem(QIcon(color_icon), f'  {color.capitalize()}')
             index += 1
-        self.colorBox.setCurrentIndex(defaultIndex)
+        self.color_box.setCurrentIndex(default_index)
 
     def init_action_box(self):
         index = 0
-        defaultIndex = -1
-        for action in config.actionList:
-            if action == config.defaultAction:
-                defaultIndex = index
-            self.actionBox.addItem(f'    {action}')
+        default_index = -1
+        for mode in config.action_mode_list:
+            if mode == config.default_action_mode:
+                default_index = index
+            self.action_box.addItem(f'    {config.action_name_list[index]}')
             index += 1
-        self.actionBox.setCurrentIndex(defaultIndex)
+        self.action_box.setCurrentIndex(default_index)
 
     def init_event_connections(self):
-        self.imgView.viewport().installEventFilter(self)
-        self.loadImgBtn.triggered.connect(self.upload_img)
-        self.deleteImgBtn.triggered.connect(self.delete_img)
-        self.saveImgBtn.triggered.connect(self.save_img)
-        self.importBtn.triggered.connect(self.import_labels)
-        self.exportAllBtn.triggered.connect(self.export_all)
-        self.exportPivotsBtn.triggered.connect(self.export_pivots)
-        self.quitAppBtn.triggered.connect(QCoreApplication.instance().quit)
-        self.incSizeBtn.triggered.connect(self.inc_img_size)
-        self.decSizeBtn.triggered.connect(self.dec_img_size)
-        self.resetSizeBtn.triggered.connect(self.reset_img_size)
-        self.clearAllBtn.triggered.connect(self.clear_labels)
-        self.colorBox.currentIndexChanged.connect(self.change_color)
-        self.actionBox.currentIndexChanged.connect(self.switch_mode)
-        self.imgSizeSlider.valueChanged.connect(self.set_img_size_slider)
-        self.autoAddPtsBtn.triggered.connect(self.auto_add_points)
+        self.img_view.viewport().installEventFilter(self)
+        self.load_img_btn.triggered.connect(self.upload_img)
+        self.delete_img_btn.triggered.connect(self.delete_img)
+        self.save_img_btn.triggered.connect(self.save_img)
+        self.import_btn.triggered.connect(self.import_labels)
+        self.export_all_btn.triggered.connect(self.export_all)
+        self.export_pivots_btn.triggered.connect(self.export_pivots)
+        self.quit_app_btn.triggered.connect(QCoreApplication.instance().quit)
+        self.inc_size_btn.triggered.connect(self.inc_img_size)
+        self.dec_size_btn.triggered.connect(self.dec_img_size)
+        self.reset_size_btn.triggered.connect(self.reset_img_size)
+        self.clear_all_btn.triggered.connect(self.clear_labels)
+        self.color_box.currentIndexChanged.connect(self.change_color)
+        self.action_box.currentIndexChanged.connect(self.switch_mode)
+        self.img_size_slider.valueChanged.connect(self.set_img_size_slider)
+        self.auto_add_pts_btn.triggered.connect(self.auto_add_points)
 
     def reset_img(self):
         self.src = None
         self.img = None
-        self.pixelSpacing = None
+        self.pixel_spacing = None
         self.path = None
-        self.ratioFromOld = 1
-        self.ratioToSrc = 1
-        self.patientInfo.setMarkdown('')
+        self.ratio_from_old = 1
+        self.ratio_to_src = 1
+        self.patient_info.setMarkdown('')
 
     def reset_index(self):
-        self.indexA = None
-        self.indexB = None
-        self.indexC = None
+        self.index_a = None
+        self.index_b = None
+        self.index_c = None
 
     def reset_highlight(self):
-        self.highlightMoveIndex = None
-        self.highlightPoints.clear()
+        self.highlight_move_index = None
+        self.highlight_points.clear()
 
     def reset_except_img(self):
         self.reset_index()
@@ -135,28 +135,28 @@ class LabelApp(QMainWindow, Ui_Form):
             return None
         old = self.img if self.img else self.src
         size = QSize(
-            (self.imgView.width() - 2 * self.imgView.lineWidth()) * self.imgSize,
-            (self.imgView.height() - 2 * self.imgView.lineWidth()) * self.imgSize
+            (self.img_view.width() - 2 * self.img_view.lineWidth()) * self.img_size,
+            (self.img_view.height() - 2 * self.img_view.lineWidth()) * self.img_size
         )
         self.img = self.src.scaled(size, Qt.KeepAspectRatio)
-        self.ratioFromOld = self.img.width() / old.width()
-        self.ratioToSrc = self.src.width() / self.img.width()
+        self.ratio_from_old = self.img.width() / old.width()
+        self.ratio_to_src = self.src.width() / self.img.width()
 
     def update_points(self):
-        if not self.img or not self.points or self.ratioFromOld == 1:
+        if not self.img or not self.points or self.ratio_from_old == 1:
             return None
         for point, _ in self.points.values():
-            point.setX(point.x() * self.ratioFromOld)
-            point.setY(point.y() * self.ratioFromOld)
-        self.ratioFromOld = 1
+            point.setX(point.x() * self.ratio_from_old)
+            point.setY(point.y() * self.ratio_from_old)
+        self.ratio_from_old = 1
 
     def get_src_point(self, point: QPointF):
-        return QPointF(point.x() * self.ratioToSrc, point.y() * self.ratioToSrc)
+        return QPointF(point.x() * self.ratio_to_src, point.y() * self.ratio_to_src)
 
     def get_img_point(self, point: QPointF):
-        return QPointF(point.x() / self.ratioToSrc, point.y() / self.ratioToSrc)
+        return QPointF(point.x() / self.ratio_to_src, point.y() / self.ratio_to_src)
 
-    def label_points(self, img: Optional[QPixmap], toSrc: bool):
+    def label_points(self, img: Optional[QPixmap], to_src: bool):
         if not img or not self.points:
             return None
         painter = QPainter()
@@ -165,29 +165,25 @@ class LabelApp(QMainWindow, Ui_Form):
         pen = QPen()
         pen.setCapStyle(Qt.RoundCap)
         font = QFont('Consolas')
-        if toSrc:
-            pen.setWidthF(config.pointWidth * self.ratioToSrc)
-            font.setPointSizeF(config.fontSize * self.ratioToSrc)
-        else:
-            pen.setWidthF(config.pointWidth)
-            font.setPointSizeF(config.fontSize)
+        pen.setWidthF(config.point_width * (self.ratio_to_src if to_src else 1))
+        font.setPointSizeF(config.font_size * (self.ratio_to_src if to_src else 1))
         painter.setFont(font)
         for index, (point, color) in self.points.items():
-            if toSrc:
+            if to_src:
                 pen.setColor(color)
-                labelPoint = self.get_src_point(point)
+                label_point = self.get_src_point(point)
             else:
                 pen.setColor(
-                    color if index != self.highlightMoveIndex and index not in self.highlightPoints
+                    color if index != self.highlight_move_index and index not in self.highlight_points
                     else QColor.lighter(color)
                 )
-                labelPoint = point
+                label_point = point
             painter.setPen(pen)
-            painter.drawPoint(labelPoint)
-            painter.drawText(static.get_index_shift(labelPoint), str(index))
+            painter.drawPoint(label_point)
+            painter.drawText(utils.get_index_shift(label_point), str(index))
         painter.end()
 
-    def label_lines(self, img: Optional[QPixmap], toSrc: bool):
+    def label_lines(self, img: Optional[QPixmap], to_src: bool):
         if not img or not self.lines:
             return None
         painter = QPainter()
@@ -196,40 +192,34 @@ class LabelApp(QMainWindow, Ui_Form):
         pen = QPen()
         pen.setCapStyle(Qt.RoundCap)
         font = QFont('Consolas')
-        if toSrc:
-            pen.setWidthF(config.lineWidth * self.ratioToSrc)
-            font.setPointSizeF(config.fontSize * self.ratioToSrc)
-        else:
-            pen.setWidthF(config.lineWidth)
-            font.setPointSizeF(config.fontSize)
+        pen.setWidthF(config.line_width * (self.ratio_to_src if to_src else 1))
+        font.setPointSizeF(config.font_size * (self.ratio_to_src if to_src else 1))
         painter.setFont(font)
-        for (indexA, indexB), color in self.lines.items():
-            isHighlight = indexA in self.highlightPoints and indexB in self.highlightPoints \
-                          and (self.mode == LabelMode.angleMode or self.mode == LabelMode.verticalMode)
-            pen.setColor(QColor.lighter(color) if isHighlight else color)
+        for (index_a, index_b), color in self.lines.items():
+            is_highlight = index_a in self.highlight_points and index_b in self.highlight_points \
+                          and (self.mode == LabelMode.ANGLE_MODE or self.mode == LabelMode.VERTICAL_MODE)
+            pen.setColor(QColor.lighter(color) if is_highlight else color)
             painter.setPen(pen)
-            A = self.points[indexA][0]
-            B = self.points[indexB][0]
-            srcA = self.get_src_point(A)
-            srcB = self.get_src_point(B)
-            if toSrc:
-                painter.drawLine(srcA, srcB)
-                labelPoint = static.get_midpoint(srcA, srcB)
-            else:
-                painter.drawLine(A, B)
-                labelPoint = static.get_midpoint(A, B)
-            realA = srcA
-            realB = srcB
-            if self.pixelSpacing:
-                realA = QPointF(srcA.x() * self.pixelSpacing[0], srcA.y() * self.pixelSpacing[1])
-                realB = QPointF(srcB.x() * self.pixelSpacing[0], srcB.y() * self.pixelSpacing[1])
+            a = self.points[index_a][0]
+            b = self.points[index_b][0]
+            src_a = self.get_src_point(a)
+            src_b = self.get_src_point(b)
+            label_a = src_a if to_src else a
+            label_b = src_b if to_src else b
+            painter.drawLine(label_a, label_b)
+            label_point = utils.get_midpoint(label_a, label_b)
+            real_a = src_a
+            real_b = src_b
+            if self.pixel_spacing:
+                real_a = QPointF(src_a.x() * self.pixel_spacing[0], src_a.y() * self.pixel_spacing[1])
+                real_b = QPointF(src_b.x() * self.pixel_spacing[0], src_b.y() * self.pixel_spacing[1])
             painter.drawText(
-                static.get_distance_shift(A, B, labelPoint),
-                str(round(static.get_distance(realA, realB), 2)) + ('mm' if self.pixelSpacing else 'px')
+                utils.get_distance_shift(a, b, label_point),
+                str(round(utils.get_distance(real_a, real_b), 2)) + ('mm' if self.pixel_spacing else 'px')
             )
         painter.end()
 
-    def label_angles(self, img: Optional[QPixmap], toSrc: bool):
+    def label_angles(self, img: Optional[QPixmap], to_src: bool):
         if not img or not self.angles:
             return None
         painter = QPainter()
@@ -238,35 +228,28 @@ class LabelApp(QMainWindow, Ui_Form):
         pen = QPen()
         pen.setCapStyle(Qt.RoundCap)
         font = QFont('Consolas')
-        if toSrc:
-            pen.setWidthF(config.angleWidth * self.ratioToSrc)
-            font.setPointSizeF(config.fontSize * self.ratioToSrc)
-        else:
-            pen.setWidthF(config.angleWidth)
-            font.setPointSizeF(config.fontSize)
+        pen.setWidthF(config.angle_width * (self.ratio_to_src if to_src else 1))
+        font.setPointSizeF(config.font_size * (self.ratio_to_src if to_src else 1))
         painter.setFont(font)
-        for (indexA, indexB, indexC), color in self.angles.items():
+        for (index_a, index_b, index_c), color in self.angles.items():
             pen.setColor(color)
             painter.setPen(pen)
-            A = self.points[indexA][0]
-            B = self.points[indexB][0]
-            C = self.points[indexC][0]
-            D, E = static.get_diag_points(self.points[indexA][0], B, C)
-            F = static.get_arc_midpoint(A, B, C)
-            if toSrc:
-                labelRect = QRectF(self.get_src_point(D), self.get_src_point(E))
-                labelPointA = self.get_src_point(B)
-                labelPointB = self.get_src_point(F)
-            else:
-                labelRect = QRectF(D, E)
-                labelPointA = B
-                labelPointB = F
-            deg = static.get_degree(A, B, C)
-            painter.drawArc(labelRect, int(static.get_begin_degree(A, B, C) * 16), int(deg * 16))
-            painter.drawText(static.get_degree_shift(labelPointA, labelPointB), str(round(deg, 2)) + '°')
+            a = self.points[index_a][0]
+            b = self.points[index_b][0]
+            c = self.points[index_c][0]
+            d, e = utils.get_diag_points(self.points[index_a][0], b, c)
+            f = utils.get_arc_midpoint(a, b, c)
+            label_d = self.get_src_point(d) if to_src else d
+            label_e = self.get_src_point(e) if to_src else e
+            label_rect = QRectF(label_d, label_e)
+            label_a = self.get_src_point(b) if to_src else b
+            label_b = self.get_src_point(f) if to_src else f
+            deg = utils.get_degree(a, b, c)
+            painter.drawArc(label_rect, int(utils.get_begin_degree(a, b, c) * 16), int(deg * 16))
+            painter.drawText(utils.get_degree_shift(label_a, label_b), str(round(deg, 2)) + '°')
         painter.end()
 
-    def label_circles(self, img: Optional[QPixmap], toSrc: bool):
+    def label_circles(self, img: Optional[QPixmap], to_src: bool):
         if not img or not self.circles:
             return None
         painter = QPainter()
@@ -274,43 +257,43 @@ class LabelApp(QMainWindow, Ui_Form):
         painter.setRenderHint(QPainter.Antialiasing, True)
         pen = QPen()
         pen.setCapStyle(Qt.RoundCap)
-        pen.setWidthF(config.lineWidth if not toSrc else config.lineWidth * self.ratioToSrc)
-        for (indexA, indexB), color in self.circles.items():
-            isHighlight = indexA in self.highlightPoints and indexB in self.highlightPoints \
-                          and self.mode == LabelMode.circleMode
-            pen.setColor(QColor.lighter(color) if isHighlight else color)
+        pen.setWidthF(config.line_width if not to_src else config.line_width * self.ratio_to_src)
+        for (index_a, index_b), color in self.circles.items():
+            is_highlight = index_a in self.highlight_points and index_b in self.highlight_points \
+                          and self.mode == LabelMode.CIRCLE_MODE
+            pen.setColor(QColor.lighter(color) if is_highlight else color)
             painter.setPen(pen)
-            A = self.points[indexA][0]
-            B = self.points[indexB][0]
+            a = self.points[index_a][0]
+            b = self.points[index_b][0]
             painter.drawEllipse(
-                static.get_min_bounding_rect(A, B) if not toSrc
-                else static.get_min_bounding_rect(self.get_src_point(A), self.get_src_point(B))
+                utils.get_min_bounding_rect(a, b) if not to_src
+                else utils.get_min_bounding_rect(self.get_src_point(a), self.get_src_point(b))
             )
         painter.end()
 
-    def update_labels(self, img: Optional[QPixmap], toSrc: bool):
-        self.label_points(img, toSrc)
-        self.label_lines(img, toSrc)
-        self.label_angles(img, toSrc)
-        self.label_circles(img, toSrc)
+    def update_labels(self, img: Optional[QPixmap], to_src: bool):
+        self.label_points(img, to_src)
+        self.label_lines(img, to_src)
+        self.label_angles(img, to_src)
+        self.label_circles(img, to_src)
 
     def update_img_view(self):
         scene = QGraphicsScene()
         if self.img:
             scene.addPixmap(self.img)
-        self.imgView.setScene(scene)
+        self.img_view.setScene(scene)
 
     def update_pivots_info(self):
         if not self.img or not self.points or not self.pivots:
-            self.pivotsInfo.setMarkdown('')
+            self.pivots_info.setMarkdown('')
             return None
         pivots = list(self.pivots)
         pivots.sort()
-        mdInfo = ''
+        md_info = ''
         for index in pivots:
             point = self.get_src_point(self.points[index][0])
-            mdInfo += f'{index}: ({round(point.x(), 2)}, {round(point.y(), 2)})\n\n'
-        self.pivotsInfo.setMarkdown(mdInfo)
+            md_info += f'{index}: ({round(point.x(), 2)}, {round(point.y(), 2)})\n\n'
+        self.pivots_info.setMarkdown(md_info)
 
     def update_all(self):
         self.update_img()
@@ -325,40 +308,40 @@ class LabelApp(QMainWindow, Ui_Form):
     def get_point_index(self, point: QPointF):
         if not self.img or not self.points:
             return None
-        distance = config.pointWidth - config.eps
+        distance = config.point_width - config.eps
         index = None
         for idx, (pt, _) in self.points.items():
-            dis = static.get_distance(point, pt)
+            dis = utils.get_distance(point, pt)
             if dis < distance:
                 distance = dis
                 index = idx
         return index
 
     def is_point_out_of_bound(self, point: QPointF):
-        return point.x() < config.pointWidth / 2 or point.x() > self.img.width() - config.pointWidth / 2 \
-               or point.y() < config.pointWidth / 2 or point.y() > self.img.height() - config.pointWidth / 2
+        return point.x() < config.point_width / 2 or point.x() > self.img.width() - config.point_width / 2 \
+               or point.y() < config.point_width / 2 or point.y() > self.img.height() - config.point_width / 2
 
     def get_index_cnt(self):
-        return len([i for i in [self.indexA, self.indexB, self.indexC] if i])
+        return len([i for i in [self.index_a, self.index_b, self.index_c] if i])
 
     def trigger_index(self, index: int):
         if not self.img or not self.points or not index:
             return None
-        if index in [self.indexA, self.indexB, self.indexC]:
-            indexs = [i for i in [self.indexA, self.indexB, self.indexC] if i != index]
-            self.indexA = indexs[0]
-            self.indexB = indexs[1]
-            self.indexC = None
-            self.highlightPoints.remove(abs(index))
+        if index in [self.index_a, self.index_b, self.index_c]:
+            indexs = [i for i in [self.index_a, self.index_b, self.index_c] if i != index]
+            self.index_a = indexs[0]
+            self.index_b = indexs[1]
+            self.index_c = None
+            self.highlight_points.remove(abs(index))
         else:
-            indexs = [i for i in [self.indexA, self.indexB, self.indexC] if i]
+            indexs = [i for i in [self.index_a, self.index_b, self.index_c] if i]
             indexs.append(index)
             while len(indexs) < 3:
                 indexs.append(None)
-            self.indexA = indexs[0]
-            self.indexB = indexs[1]
-            self.indexC = indexs[2]
-            self.highlightPoints.add(abs(index))
+            self.index_a = indexs[0]
+            self.index_b = indexs[1]
+            self.index_c = indexs[2]
+            self.highlight_points.add(abs(index))
 
     def end_trigger(self):
         self.reset_index()
@@ -366,7 +349,7 @@ class LabelApp(QMainWindow, Ui_Form):
 
     def end_trigger_with(self, index: int):
         self.end_trigger()
-        self.highlightMoveIndex = index
+        self.highlight_move_index = index
 
     def get_new_index(self):
         return max(self.points.keys() if self.points else [0]) + 1
@@ -377,18 +360,18 @@ class LabelApp(QMainWindow, Ui_Form):
             self.points[index] = point, self.color
             return index
 
-    def add_line(self, indexA: int, indexB: int):
-        if self.img and indexA in self.points and indexB in self.points:
-            self.lines[static.get_line_key(indexA, indexB)] = self.color
+    def add_line(self, index_a: int, index_b: int):
+        if self.img and index_a in self.points and index_b in self.points:
+            self.lines[utils.get_line_key(index_a, index_b)] = self.color
 
-    def add_angle(self, indexA: int, indexB: int, indexC: int):
-        if self.img and static.get_line_key(indexA, indexB) in self.lines \
-                and static.get_line_key(indexB, indexC) in self.lines:
-            self.angles[static.get_angle_key(indexA, indexB, indexC)] = self.color
+    def add_angle(self, index_a: int, index_b: int, index_c: int):
+        if self.img and utils.get_line_key(index_a, index_b) in self.lines \
+                and utils.get_line_key(index_b, index_c) in self.lines:
+            self.angles[utils.get_angle_key(index_a, index_b, index_c)] = self.color
 
-    def add_circle(self, indexA: int, indexB: int):
-        if self.img and indexA in self.points and indexB in self.points:
-            self.circles[(indexA, indexB)] = self.color
+    def add_circle(self, index_a: int, index_b: int):
+        if self.img and index_a in self.points and index_b in self.points:
+            self.circles[(index_a, index_b)] = self.color
 
     def erase_point(self, index: int):
         if index not in self.points:
@@ -406,7 +389,7 @@ class LabelApp(QMainWindow, Ui_Form):
         self.pivots.discard(index)
 
     def erase_highlight(self):
-        for index in [self.indexA, self.indexB, self.indexC]:
+        for index in [self.index_a, self.index_b, self.index_c]:
             if index and index < 0:
                 self.erase_point(-index)
         self.reset_index()
@@ -416,7 +399,7 @@ class LabelApp(QMainWindow, Ui_Form):
     def handle_point_mode(self, evt: QMouseEvent):
         if evt.type() != QMouseEvent.MouseButtonPress or evt.button() != Qt.LeftButton:
             return None
-        point = self.imgView.mapToScene(evt.pos())
+        point = self.img_view.mapToScene(evt.pos())
         index = self.get_point_index(point)
         if not index:
             self.add_new_point(point)
@@ -427,34 +410,34 @@ class LabelApp(QMainWindow, Ui_Form):
     def handle_line_mode(self, evt: QMouseEvent):
         if evt.type() != QMouseEvent.MouseButtonPress or evt.button() != Qt.LeftButton:
             return None
-        point = self.imgView.mapToScene(evt.pos())
+        point = self.img_view.mapToScene(evt.pos())
         index = self.get_point_index(point)
         self.trigger_index(index if index else -self.add_new_point(point))
         if self.get_index_cnt() == 2:
-            indexA = abs(self.indexA)
-            indexB = abs(self.indexB)
-            self.add_line(indexA, indexB)
-            self.end_trigger_with(indexB)
+            index_a = abs(self.index_a)
+            index_b = abs(self.index_b)
+            self.add_line(index_a, index_b)
+            self.end_trigger_with(index_b)
         self.update_all()
 
     def handle_angle_mode(self, evt: QMouseEvent):
         if evt.type() != QMouseEvent.MouseButtonPress or evt.button() != Qt.LeftButton:
             return None
-        self.trigger_index(self.get_point_index(self.imgView.mapToScene(evt.pos())))
-        if self.get_index_cnt() == 2 and static.get_line_key(self.indexA, self.indexB) not in self.lines:
-            self.trigger_index(self.indexA)
+        self.trigger_index(self.get_point_index(self.img_view.mapToScene(evt.pos())))
+        if self.get_index_cnt() == 2 and utils.get_line_key(self.index_a, self.index_b) not in self.lines:
+            self.trigger_index(self.index_a)
         elif self.get_index_cnt() == 3:
-            if static.get_line_key(self.indexB, self.indexC) in self.lines:
-                self.add_angle(self.indexA, self.indexB, self.indexC)
-                self.end_trigger_with(self.indexC)
+            if utils.get_line_key(self.index_b, self.index_c) in self.lines:
+                self.add_angle(self.index_a, self.index_b, self.index_c)
+                self.end_trigger_with(self.index_c)
             else:
-                indexC = self.indexC
+                index_c = self.index_c
                 self.end_trigger()
-                self.trigger_index(indexC)
+                self.trigger_index(index_c)
         self.update_all()
 
     def handle_circle_mode(self, evt: QMouseEvent):
-        point = self.imgView.mapToScene(evt.pos())
+        point = self.img_view.mapToScene(evt.pos())
         if evt.type() == QMouseEvent.MouseButtonPress and evt.button() == Qt.LeftButton:
             if self.get_index_cnt() == 0:
                 index = self.get_point_index(point)
@@ -462,120 +445,121 @@ class LabelApp(QMainWindow, Ui_Form):
                 self.trigger_index(
                     -self.add_new_point(QPointF(point.x() + 2 * config.eps, point.y() + 2 * config.eps))
                 )
-                self.add_circle(abs(self.indexA), abs(self.indexB))
+                self.add_circle(abs(self.index_a), abs(self.index_b))
             elif self.get_index_cnt() == 2:
-                self.end_trigger_with(abs(self.indexB))
+                self.end_trigger_with(abs(self.index_b))
         elif evt.type() == QMouseEvent.MouseMove and self.get_index_cnt() == 2 \
                 and not self.is_point_out_of_bound(point):
-            indexB = abs(self.indexB)
-            self.points[indexB][0].setX(point.x())
-            self.points[indexB][0].setY(point.y())
+            index_b = abs(self.index_b)
+            self.points[index_b][0].setX(point.x())
+            self.points[index_b][0].setY(point.y())
         self.update_all()
 
     def handle_midpoint_mode(self, evt: QMouseEvent):
         if evt.type() != QMouseEvent.MouseButtonPress or evt.button() != Qt.LeftButton:
             return None
-        self.trigger_index(self.get_point_index(self.imgView.mapToScene(evt.pos())))
+        self.trigger_index(self.get_point_index(self.img_view.mapToScene(evt.pos())))
         if self.get_index_cnt() == 2:
-            if static.get_line_key(self.indexA, self.indexB) in self.lines:
-                A = self.points[self.indexA][0]
-                B = self.points[self.indexB][0]
-                indexC = self.add_new_point(static.get_midpoint(A, B))
-                self.add_line(self.indexA, indexC)
-                self.add_line(self.indexB, indexC)
-                self.end_trigger_with(self.indexB)
+            if utils.get_line_key(self.index_a, self.index_b) in self.lines:
+                a = self.points[self.index_a][0]
+                b = self.points[self.index_b][0]
+                index_c = self.add_new_point(utils.get_midpoint(a, b))
+                self.add_line(self.index_a, index_c)
+                self.add_line(self.index_b, index_c)
+                self.end_trigger_with(self.index_b)
             else:
-                self.trigger_index(self.indexA)
+                self.trigger_index(self.index_a)
         self.update_all()
 
     def handle_vertical_mode(self, evt: QMouseEvent):
         if evt.type() != QMouseEvent.MouseButtonPress or evt.button() != Qt.LeftButton:
             return None
-        self.trigger_index(self.get_point_index(self.imgView.mapToScene(evt.pos())))
+        self.trigger_index(self.get_point_index(self.img_view.mapToScene(evt.pos())))
         if self.get_index_cnt() == 2:
-            if static.get_line_key(self.indexA, self.indexB) not in self.lines:
-                self.trigger_index(self.indexA)
+            if utils.get_line_key(self.index_a, self.index_b) not in self.lines:
+                self.trigger_index(self.index_a)
         elif self.get_index_cnt() == 3:
-            A = self.points[self.indexA][0]
-            B = self.points[self.indexB][0]
-            C = self.points[self.indexC][0]
-            if static.is_on_a_line(A, B, C):
-                if static.get_line_key(self.indexB, self.indexC) in self.lines:
-                    self.trigger_index(self.indexA)
+            a = self.points[self.index_a][0]
+            b = self.points[self.index_b][0]
+            c = self.points[self.index_c][0]
+            if utils.is_on_a_line(a, b, c):
+                if utils.get_line_key(self.index_b, self.index_c) in self.lines:
+                    self.trigger_index(self.index_a)
                 else:
-                    indexC = self.indexC
+                    index_c = self.index_c
                     self.end_trigger()
-                    self.trigger_index(indexC)
+                    self.trigger_index(index_c)
             else:
-                D = static.get_foot_point(A, B, C)
-                indexD = self.add_new_point(D)
-                if not static.is_on_segment(A, B, D):
+                d = utils.get_foot_point(a, b, c)
+                index_d = self.add_new_point(d)
+                if not utils.is_on_segment(a, b, d):
                     self.add_line(
-                        (self.indexA if static.get_distance(A, D) < static.get_distance(B, D) else self.indexB), indexD
+                        (self.index_a if utils.get_distance(a, d) < utils.get_distance(b, d) else self.index_b),
+                        index_d
                     )
-                self.add_line(self.indexC, indexD)
-                self.end_trigger_with(self.indexC)
+                self.add_line(self.index_c, index_d)
+                self.end_trigger_with(self.index_c)
             self.update_all()
 
     def handle_drag_mode(self, evt: QMouseEvent):
-        point = self.imgView.mapToScene(evt.pos())
+        point = self.img_view.mapToScene(evt.pos())
         if evt.type() == QMouseEvent.MouseButtonPress and evt.button() == Qt.LeftButton and self.get_index_cnt() == 0:
             self.trigger_index(self.get_point_index(point))
         elif evt.type() == QMouseEvent.MouseMove and self.get_index_cnt() == 1 \
                 and not self.is_point_out_of_bound(point):
-            self.points[self.indexA][0].setX(point.x())
-            self.points[self.indexA][0].setY(point.y())
+            self.points[self.index_a][0].setX(point.x())
+            self.points[self.index_a][0].setY(point.y())
         elif evt.type() == QMouseEvent.MouseButtonRelease and self.get_index_cnt() == 1:
-            self.trigger_index(self.indexA)
+            self.trigger_index(self.index_a)
         self.update_all()
 
     def handle_erase_point_mode(self, evt: QMouseEvent):
-        index = self.get_point_index(self.imgView.mapToScene(evt.pos()))
+        index = self.get_point_index(self.img_view.mapToScene(evt.pos()))
         if evt.type() == QMouseEvent.MouseButtonPress and evt.button() == Qt.LeftButton:
             self.erase_point(index)
         self.update_all()
 
     def handle_highlight_move(self, evt: QMouseEvent):
-        point = self.imgView.mapToScene(evt.pos())
-        self.highlightMoveIndex = self.get_point_index(point)
+        point = self.img_view.mapToScene(evt.pos())
+        self.highlight_move_index = self.get_point_index(point)
         point = self.get_src_point(point)
         text = f'坐标：{round(point.x(), 2)}, {round(point.y(), 2)}'
-        self.statusBar.showMessage(text, 1000)
+        self.status_bar.showMessage(text, 1000)
         self.update_all()
 
     def modify_index(self, index: int):
-        newIndex, modify = QInputDialog.getInt(self, '更改标号', '请输入一个新的标号', index, 0, step=1)
-        if not modify or newIndex == index:
+        new_index, modify = QInputDialog.getInt(self, '更改标号', '请输入一个新的标号', index, 0, step=1)
+        if not modify or new_index == index:
             return None
-        if newIndex <= 0:
+        if new_index <= 0:
             self.warning('标号必须为正整数！')
             return None
-        if newIndex in self.points:
+        if new_index in self.points:
             self.warning('此标号已存在！')
             return None
-        self.points[newIndex] = self.points[index]
+        self.points[new_index] = self.points[index]
         self.points.pop(index)
         for line in list(self.lines.keys()):
             if index in line:
-                fixedIndex = line[0] + line[1] - index
-                self.lines[static.get_line_key(newIndex, fixedIndex)] = self.lines[line]
+                fixed_index = line[0] + line[1] - index
+                self.lines[utils.get_line_key(new_index, fixed_index)] = self.lines[line]
                 self.lines.pop(line)
         for angle in list(self.angles.keys()):
             if index in angle:
                 if index == angle[1]:
-                    self.angles[angle[0], newIndex, angle[2]] = self.angles[angle]
+                    self.angles[angle[0], new_index, angle[2]] = self.angles[angle]
                 else:
-                    fixedIndex = angle[0] + angle[2] - index
-                    self.angles[static.get_angle_key(newIndex, angle[1], fixedIndex)] = self.angles[angle]
+                    fixed_index = angle[0] + angle[2] - index
+                    self.angles[utils.get_angle_key(new_index, angle[1], fixed_index)] = self.angles[angle]
                 self.angles.pop(angle)
         for circle in list(self.circles.keys()):
             if index in circle:
-                key = (newIndex, circle[1]) if index == circle[0] else (circle[0], newIndex)
+                key = (new_index, circle[1]) if index == circle[0] else (circle[0], new_index)
                 self.circles[key] = self.circles[circle]
                 self.circles.pop(circle)
         if index in self.pivots:
             self.pivots.remove(index)
-            self.pivots.add(newIndex)
+            self.pivots.add(new_index)
 
     def add_pivots(self, index: int):
         if self.img and index in self.points:
@@ -589,50 +573,50 @@ class LabelApp(QMainWindow, Ui_Form):
         self.remove_pivots(index) if index in self.pivots else self.add_pivots(index)
 
     def create_right_btn_menu(self, index: int, point: QPointF):
-        self.rightBtnMenu = QMenu(self)
-        modifyIndex = QAction('更改标号', self.rightBtnMenu)
-        modifyIndexTriggered: pyqtBoundSignal = modifyIndex.triggered
-        modifyIndexTriggered.connect(lambda: self.modify_index(index))
-        switchPivotState = QAction('删除该点信息' if index in self.pivots else '查看该点信息', self.rightBtnMenu)
-        switchPivotStateTriggered: pyqtBoundSignal = switchPivotState.triggered
-        switchPivotStateTriggered.connect(lambda: self.switch_pivot_state(index))
-        erasePoint = QAction('清除该点', self.rightBtnMenu)
-        erasePointTriggered: pyqtBoundSignal = erasePoint.triggered
-        erasePointTriggered.connect(lambda: self.erase_point(index))
-        self.rightBtnMenu.addAction(modifyIndex)
-        self.rightBtnMenu.addAction(switchPivotState)
-        self.rightBtnMenu.addAction(erasePoint)
-        self.rightBtnMenu.exec(point)
+        self.right_btn_menu = QMenu(self)
+        modify_index = QAction('更改标号', self.right_btn_menu)
+        modify_index_triggered: pyqtBoundSignal = modify_index.triggered
+        modify_index_triggered.connect(lambda: self.modify_index(index))
+        switch_pivot_state = QAction('删除该点信息' if index in self.pivots else '查看该点信息', self.right_btn_menu)
+        switch_pivot_state_triggered: pyqtBoundSignal = switch_pivot_state.triggered
+        switch_pivot_state_triggered.connect(lambda: self.switch_pivot_state(index))
+        erase_point = QAction('清除该点', self.right_btn_menu)
+        erase_point_triggered: pyqtBoundSignal = erase_point.triggered
+        erase_point_triggered.connect(lambda: self.erase_point(index))
+        self.right_btn_menu.addAction(modify_index)
+        self.right_btn_menu.addAction(switch_pivot_state)
+        self.right_btn_menu.addAction(erase_point)
+        self.right_btn_menu.exec(point)
 
     def handle_right_btn_menu(self, evt: QMouseEvent):
-        if (index := self.get_point_index(self.imgView.mapToScene(evt.pos()))) != -1:
+        if (index := self.get_point_index(self.img_view.mapToScene(evt.pos()))) != -1:
             self.erase_highlight()
-            self.highlightMoveIndex = index
+            self.highlight_move_index = index
             self.update_all()
             self.create_right_btn_menu(index, evt.globalPos())
-            self.highlightMoveIndex = self.get_point_index(
-                self.imgView.mapToScene(self.imgView.mapFromParent(self.mapFromParent(QCursor.pos())))
+            self.highlight_move_index = self.get_point_index(
+                self.img_view.mapToScene(self.img_view.mapFromParent(self.mapFromParent(QCursor.pos())))
             )
             self.update_all()
 
     def eventFilter(self, obj: QObject, evt: QEvent):
-        if not self.img or obj is not self.imgView.viewport() or evt.type() not in self.targetEventType:
+        if not self.img or obj is not self.img_view.viewport() or evt.type() not in self.target_event_type:
             return super().eventFilter(obj, evt)
-        if self.mode == LabelMode.pointMode:
+        if self.mode == LabelMode.POINT_MODE:
             self.handle_point_mode(evt)
-        elif self.mode == LabelMode.lineMode:
+        elif self.mode == LabelMode.LINE_MODE:
             self.handle_line_mode(evt)
-        elif self.mode == LabelMode.angleMode:
+        elif self.mode == LabelMode.ANGLE_MODE:
             self.handle_angle_mode(evt)
-        elif self.mode == LabelMode.circleMode:
+        elif self.mode == LabelMode.CIRCLE_MODE:
             self.handle_circle_mode(evt)
-        elif self.mode == LabelMode.midpointMode:
+        elif self.mode == LabelMode.MIDPOINT_MODE:
             self.handle_midpoint_mode(evt)
-        elif self.mode == LabelMode.verticalMode:
+        elif self.mode == LabelMode.VERTICAL_MODE:
             self.handle_vertical_mode(evt)
-        elif self.mode == LabelMode.movePointMode:
+        elif self.mode == LabelMode.MOVE_POINT_MODE:
             self.handle_drag_mode(evt)
-        elif self.mode == LabelMode.erasePointMode:
+        elif self.mode == LabelMode.ERASE_POINT_MODE:
             self.handle_erase_point_mode(evt)
         if evt.type() == QMouseEvent.MouseMove:
             self.handle_highlight_move(evt)
@@ -644,36 +628,36 @@ class LabelApp(QMainWindow, Ui_Form):
         QMessageBox.warning(self, '警告', text)
 
     # DICOM (*.dcm)
-    def load_dcm_img(self, imgPath: str):
-        if static.is_file_readable(imgPath):
-            self.src, mdInfo, self.pixelSpacing = static.get_dcm_img_with_info(imgPath)
-            self.path = static.rename_path_ext(imgPath, '.jpg')
-            self.patientInfo.setMarkdown(mdInfo)
+    def load_dcm_img(self, path: str):
+        if utils.is_file_readable(path):
+            self.src, md_info, self.pixel_spacing = utils.get_dcm_img_with_info(path)
+            self.path = utils.rename_path_ext(path, '.jpg')
+            self.patient_info.setMarkdown(md_info)
             self.update_all()
         else:
             self.warning('Dicom 文件不存在或不可读！')
 
     # JPEG (*.jpg;*.jpeg;*.jpe), PNG (*.png)
-    def load_img(self, imgPath: str):
-        if static.is_file_readable(imgPath):
+    def load_img(self, path: str):
+        if utils.is_file_readable(path):
             self.src = QPixmap()
-            self.src.load(imgPath)
-            self.path = imgPath
+            self.src.load(path)
+            self.path = path
             self.update_all()
         else:
             self.warning('图片文件不存在或不可读！')
 
     def upload_img(self):
         caption = '新建'
-        initDir = self.dir if self.dir else static.get_home_img_dir()
-        extFilter = 'DICOM (*.dcm);;JPEG (*.jpg;*.jpeg;*.jpe);;PNG (*.png)'
-        dcmFilter = 'DICOM (*.dcm)'
-        imgPath, imgExt = QFileDialog.getOpenFileName(self, caption, initDir, extFilter, dcmFilter)
-        if not imgPath:
+        init_dir = self.dir if self.dir else utils.get_home_img_dir()
+        ext_filter = 'DICOM (*.dcm);;JPEG (*.jpg;*.jpeg;*.jpe);;PNG (*.png)'
+        dcm_filter = 'DICOM (*.dcm)'
+        path, img_ext = QFileDialog.getOpenFileName(self, caption, init_dir, ext_filter, dcm_filter)
+        if not path:
             return None
         self.reset_all()
-        self.load_dcm_img(imgPath) if imgExt == dcmFilter else self.load_img(imgPath)
-        self.dir = static.get_parent_dir(imgPath)
+        self.load_dcm_img(path) if img_ext == dcm_filter else self.load_img(path)
+        self.dir = utils.get_parent_dir(path)
 
     def delete_img(self):
         if not self.src:
@@ -690,29 +674,25 @@ class LabelApp(QMainWindow, Ui_Form):
         self.erase_highlight()
         self.update_labels(img, True)
         caption = '保存'
-        extFilter = 'JPEG (*.jpg;*.jpeg;*.jpe);;PNG (*.png)'
-        initFilter = 'JPEG (*.jpg;*.jpeg;*.jpe)'
-        imgPath, _ = QFileDialog.getSaveFileName(self, caption, self.path, extFilter, initFilter)
-        if imgPath:
-            img.save(imgPath)
+        ext_filter = 'JPEG (*.jpg;*.jpeg;*.jpe);;PNG (*.png)'
+        init_filter = 'JPEG (*.jpg;*.jpeg;*.jpe)'
+        path, _ = QFileDialog.getSaveFileName(self, caption, self.path, ext_filter, init_filter)
+        if path:
+            img.save(path)
 
     def import_labels(self):
         if not self.img:
             self.warning('请先新建一个项目！')
             return None
         caption = '导入'
-        initPath = static.get_home_img_dir()
-        if path := self.path.split('.'):
-            defaultPath = f'{self.path[:-(len(path[-1]) + 1)]}.json'
-            if static.is_file_exists(defaultPath):
-                initPath = defaultPath
-        jsonFilter = 'JSON (*.json)'
-        jsonPath, _ = QFileDialog.getOpenFileName(self, caption, initPath, jsonFilter)
-        if not jsonPath:
+        init_path = utils.rename_path_ext(self.path, '.json')
+        json_filter = 'JSON (*.json)'
+        path, _ = QFileDialog.getOpenFileName(self, caption, init_path, json_filter)
+        if not path:
             return None
-        if not static.is_file_readable(jsonPath):
+        if not utils.is_file_readable(path):
             self.warning('JSON 文件不存在或不可读！')
-        if data := static.load_from_json(jsonPath):
+        if data := utils.load_from_json(path):
             self.reset_except_img()
             if len(data) == 1:
                 pivots: List[Tuple[int, float, float]] = data['pivots']
@@ -724,14 +704,14 @@ class LabelApp(QMainWindow, Ui_Form):
                 for index, x, y, color in points:
                     self.points[index] = self.get_img_point(QPointF(x, y)), QColor(color)
                 lines: List[Tuple[int, int, str]] = data['lines']
-                for indexA, indexB, color in lines:
-                    self.lines[static.get_line_key(indexA, indexB)] = QColor(color)
+                for index_a, index_b, color in lines:
+                    self.lines[utils.get_line_key(index_a, index_b)] = QColor(color)
                 angles: List[Tuple[int, int, int, str]] = data['angles']
-                for indexA, indexB, indexC, color in angles:
-                    self.angles[static.get_angle_key(indexA, indexB, indexC)] = QColor(color)
+                for index_a, index_b, index_c, color in angles:
+                    self.angles[utils.get_angle_key(index_a, index_b, index_c)] = QColor(color)
                 circles: List[Tuple[int, int, str]] = data['circles']
-                for indexA, indexB, color in circles:
-                    self.circles[(indexA, indexB)] = QColor(color)
+                for index_a, index_b, color in circles:
+                    self.circles[(index_a, index_b)] = QColor(color)
                 self.pivots = set(data['pivots'])
             self.update_all()
 
@@ -740,21 +720,19 @@ class LabelApp(QMainWindow, Ui_Form):
             self.warning('请先新建一个项目！')
             return None
         caption = '导出全部'
-        initPath = static.get_home_img_dir()
-        if path := self.path.split('.'):
-            initPath = f'{self.path[:-(len(path[-1]) + 1)]}.json'
-        jsonFilter = 'JSON (*.json)'
-        jsonPath, _ = QFileDialog.getSaveFileName(self, caption, initPath, jsonFilter)
-        if not jsonPath:
+        init_path = utils.rename_path_ext(self.path, '.json')
+        json_filter = 'JSON (*.json)'
+        path, _ = QFileDialog.getSaveFileName(self, caption, init_path, json_filter)
+        if not path:
             return None
-        if static.is_file_exists(jsonPath) and not static.is_file_writable(jsonPath):
+        if utils.is_file_exists(path) and not utils.is_file_writable(path):
             self.warning('JSON 文件不可读！')
             return None
         data = dict(points=[], lines=[], angles=[], circles=[], pivots=[])
         points: List[Tuple[int, float, float, str]] = data['points']
         for index, point in self.points.items():
-            srcPoint = self.get_src_point(point[0])
-            points.append((index, srcPoint.x(), srcPoint.y(), point[1].name()))
+            src_point = self.get_src_point(point[0])
+            points.append((index, src_point.x(), src_point.y(), point[1].name()))
         lines: List[Tuple[int, int, str]] = data['lines']
         for index, color in self.lines.items():
             lines.append((index[0], index[1], color.name()))
@@ -765,21 +743,19 @@ class LabelApp(QMainWindow, Ui_Form):
         for index, color in self.circles.items():
             circles.append((index[0], index[1], color.name()))
         data['pivots'] = list(self.pivots)
-        static.save_json_file(data, jsonPath)
+        utils.save_json_file(data, path)
 
     def export_pivots(self):
         if not self.img:
             self.warning('请先新建一个项目！')
             return None
         caption = '导出关键点'
-        initPath = static.get_home_img_dir()
-        if path := self.path.split('.'):
-            initPath = f'{self.path[:-(len(path[-1]) + 1)]}_pivots.json'
-        jsonFilter = 'JSON (*.json)'
-        jsonPath, _ = QFileDialog.getSaveFileName(self, caption, initPath, jsonFilter)
-        if not jsonPath:
+        init_path = utils.rename_path_ext(self.path, '_pivots.json')
+        json_filter = 'JSON (*.json)'
+        json_path, _ = QFileDialog.getSaveFileName(self, caption, init_path, json_filter)
+        if not json_path:
             return None
-        if static.is_file_exists(jsonPath) and not static.is_file_writable(jsonPath):
+        if utils.is_file_exists(json_path) and not utils.is_file_writable(json_path):
             self.warning('JSON 文件不可读！')
             return None
         data = dict(pivots=[])
@@ -787,27 +763,27 @@ class LabelApp(QMainWindow, Ui_Form):
         for index in self.pivots:
             point = self.get_src_point(self.points[index][0])
             pivots.append((index, point.x(), point.y()))
-        static.save_json_file(data, jsonPath)
+        utils.save_json_file(data, json_path)
 
     def inc_img_size(self):
-        size = min(int(self.imgSize * 100 + 10), 200)
-        self.imgSizeSlider.setValue(size)
-        self.imgSize = size / 100
-        self.imgSizeLabel.setText(f'大小：{size}%')
+        size = min(int(self.img_size * 100 + 10), 200)
+        self.img_size_slider.setValue(size)
+        self.img_size = size / 100
+        self.img_size_label.setText(f'大小：{size}%')
         self.update_all()
 
     def dec_img_size(self):
-        size = max(int(self.imgSize * 100 - 10), 50)
-        self.imgSizeSlider.setValue(size)
-        self.imgSize = size / 100
-        self.imgSizeLabel.setText(f'大小：{size}%')
+        size = max(int(self.img_size * 100 - 10), 50)
+        self.img_size_slider.setValue(size)
+        self.img_size = size / 100
+        self.img_size_label.setText(f'大小：{size}%')
         self.update_all()
 
     def reset_img_size(self):
         size = 100
-        self.imgSizeSlider.setValue(size)
-        self.imgSize = size / 100
-        self.imgSizeLabel.setText(f'大小：{size}%')
+        self.img_size_slider.setValue(size)
+        self.img_size = size / 100
+        self.img_size_label.setText(f'大小：{size}%')
         self.update_all()
 
     def clear_labels(self):
@@ -817,34 +793,16 @@ class LabelApp(QMainWindow, Ui_Form):
         self.update_all()
 
     def change_color(self):
-        self.color = QColor(config.colorList[self.colorBox.currentIndex()])
+        self.color = QColor(config.color_list[self.color_box.currentIndex()])
 
     def switch_mode(self):
         self.erase_highlight()
-        text = config.actionList[self.actionBox.currentIndex()]
-        if text == '点':
-            self.mode = LabelMode.pointMode
-        elif text == '线':
-            self.mode = LabelMode.lineMode
-        elif text == '角度':
-            self.mode = LabelMode.angleMode
-        elif text == '圆':
-            self.mode = LabelMode.circleMode
-        elif text == '中点':
-            self.mode = LabelMode.midpointMode
-        elif text == '直角':
-            self.mode = LabelMode.verticalMode
-        elif text == '移动点':
-            self.mode = LabelMode.movePointMode
-        elif text == '删除点':
-            self.mode = LabelMode.erasePointMode
-        else:
-            self.mode = LabelMode.defaultMode
+        self.mode = config.action_mode_list[self.action_box.currentIndex()]
 
     def set_img_size_slider(self):
-        size = self.imgSizeSlider.value()
-        self.imgSize = size / 100
-        self.imgSizeLabel.setText(f'大小：{size}%')
+        size = self.img_size_slider.value()
+        self.img_size = size / 100
+        self.img_size_label.setText(f'大小：{size}%')
         self.update_all()
 
     def add_real_point(self, index, x: float, y: float):
