@@ -8,9 +8,11 @@ from PyQt5.QtWidgets import QAction, QFileDialog, QGraphicsScene, QInputDialog, 
                             QStatusBar
 from typing import Dict, List, Optional, Set, Tuple
 
+
 class LabelApp(QMainWindow, Ui_form):
     def __init__(self):
         super().__init__()
+
         # init UI
         self.setupUi(self)
         self.retranslateUi(self)
@@ -22,45 +24,58 @@ class LabelApp(QMainWindow, Ui_form):
         self.mode = LabelMode.DEFAULT_MODE
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
+
         # init image size
         self.img_size = 1
+
         # init image
         self.src: Optional[QPixmap] = None
         self.img: Optional[QPixmap] = None
         self.path: Optional[str] = None
         self.ratio_from_old = 1
         self.ratio_to_src = 1
+
         # init pixel spacing
         self.pixel_spacing: Optional[Tuple[float, float]] = None
+
         # init events
         self.target_event_type = [QMouseEvent.MouseButtonPress, QMouseEvent.MouseMove, QMouseEvent.MouseButtonRelease]
         self.init_event_connections()
+
         # init indexs
         self.index_a: Optional[int] = None
         self.index_b: Optional[int] = None
         self.index_c: Optional[int] = None
+
         # a: index_a - a, color
         self.points: Dict[int, Tuple[QPointF, QColor]] = {}
+
         # ab: index_a, index_b - color
         self.lines: Dict[Tuple[int, int], QColor] = {}
+
         # ∠abc: index_a, index_b, index_c - color
         self.angles: Dict[Tuple[int, int, int], QColor] = {}
+
         # ⊙a, r = ab: index_a, index_b - color
         self.circles: Dict[Tuple[int, int], QColor] = {}
+
         # init pivots
         self.pivots: Set[int] = set()
+
         # init highlight
         self.highlight_move_index: Optional[int] = None
         self.highlight_points: Set[int] = set()
+
         # init right button menu
         self.right_btn_menu = QMenu(self)
+
         # init image dir
         self.dir: Optional[str] = None
 
     def init_color_box(self):
-        index = 0
         size = self.color_box.iconSize()
         default_index = -1
+        index = 0
         for color in config.color_list:
             if color == config.default_color:
                 default_index = index
@@ -71,8 +86,8 @@ class LabelApp(QMainWindow, Ui_form):
         self.color_box.setCurrentIndex(default_index)
 
     def init_action_box(self):
-        index = 0
         default_index = -1
+        index = 0
         for mode in config.action_mode_list:
             if mode == config.default_action_mode:
                 default_index = index
@@ -101,10 +116,10 @@ class LabelApp(QMainWindow, Ui_form):
     def reset_img(self):
         self.src = None
         self.img = None
-        self.pixel_spacing = None
         self.path = None
         self.ratio_from_old = 1
         self.ratio_to_src = 1
+        self.pixel_spacing = None
         self.patient_info.setMarkdown('')
 
     def reset_index(self):
@@ -164,8 +179,8 @@ class LabelApp(QMainWindow, Ui_form):
         painter.setRenderHint(QPainter.Antialiasing, True)
         pen = QPen()
         pen.setCapStyle(Qt.RoundCap)
-        font = QFont('Consolas')
         pen.setWidthF(config.point_width * (self.ratio_to_src if to_src else 1))
+        font = QFont('Consolas')
         font.setPointSizeF(config.font_size * (self.ratio_to_src if to_src else 1))
         painter.setFont(font)
         for index, (point, color) in self.points.items():
@@ -191,8 +206,8 @@ class LabelApp(QMainWindow, Ui_form):
         painter.setRenderHint(QPainter.Antialiasing, True)
         pen = QPen()
         pen.setCapStyle(Qt.RoundCap)
-        font = QFont('Consolas')
         pen.setWidthF(config.line_width * (self.ratio_to_src if to_src else 1))
+        font = QFont('Consolas')
         font.setPointSizeF(config.font_size * (self.ratio_to_src if to_src else 1))
         painter.setFont(font)
         for (index_a, index_b), color in self.lines.items():
@@ -207,14 +222,13 @@ class LabelApp(QMainWindow, Ui_form):
             label_a = src_a if to_src else a
             label_b = src_b if to_src else b
             painter.drawLine(label_a, label_b)
-            label_point = utils.get_midpoint(label_a, label_b)
             real_a = src_a
             real_b = src_b
             if self.pixel_spacing:
                 real_a = QPointF(src_a.x() * self.pixel_spacing[0], src_a.y() * self.pixel_spacing[1])
                 real_b = QPointF(src_b.x() * self.pixel_spacing[0], src_b.y() * self.pixel_spacing[1])
             painter.drawText(
-                utils.get_distance_shift(a, b, label_point),
+                utils.get_distance_shift(a, b, utils.get_midpoint(label_a, label_b)),
                 str(round(utils.get_distance(real_a, real_b), 2)) + ('mm' if self.pixel_spacing else 'px')
             )
         painter.end()
@@ -227,8 +241,8 @@ class LabelApp(QMainWindow, Ui_form):
         painter.setRenderHint(QPainter.Antialiasing, True)
         pen = QPen()
         pen.setCapStyle(Qt.RoundCap)
-        font = QFont('Consolas')
         pen.setWidthF(config.angle_width * (self.ratio_to_src if to_src else 1))
+        font = QFont('Consolas')
         font.setPointSizeF(config.font_size * (self.ratio_to_src if to_src else 1))
         painter.setFont(font)
         for (index_a, index_b, index_c), color in self.angles.items():
@@ -823,4 +837,14 @@ class LabelApp(QMainWindow, Ui_form):
     y
     '''
     def auto_add_points(self):
-        pass
+        if not self.src:
+            self.warning('请先新建一个项目！')
+            return None
+
+        # get file_name and byte_array
+        file_name = utils.get_path_file_name(self.path)
+        byte_array = utils.get_img_byte_array(self.src, 'jpg')
+
+        # TODO: get real points and add
+
+        self.update_all()

@@ -1,6 +1,7 @@
 import enum
 from enum import Enum
 
+
 class LabelMode(Enum):
     DEFAULT_MODE = enum.auto()
     POINT_MODE = enum.auto()
