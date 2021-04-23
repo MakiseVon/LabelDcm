@@ -336,19 +336,19 @@ class LabelApp(QMainWindow, Ui_form):
                or point.y() < config.point_width / 2 or point.y() > self.img.height() - config.point_width / 2
 
     def get_index_cnt(self):
-        return len([i for i in [self.index_a, self.index_b, self.index_c] if i])
+        return len([i for i in (self.index_a, self.index_b, self.index_c) if i])
 
     def trigger_index(self, index: int):
         if not self.img or not self.points or not index:
             return None
-        if index in [self.index_a, self.index_b, self.index_c]:
-            indexs = [i for i in [self.index_a, self.index_b, self.index_c] if i != index]
+        if index in (self.index_a, self.index_b, self.index_c):
+            indexs = [i for i in (self.index_a, self.index_b, self.index_c) if i != index]
             self.index_a = indexs[0]
             self.index_b = indexs[1]
             self.index_c = None
             self.highlight_points.remove(abs(index))
         else:
-            indexs = [i for i in [self.index_a, self.index_b, self.index_c] if i]
+            indexs = [i for i in (self.index_a, self.index_b, self.index_c) if i]
             indexs.append(index)
             while len(indexs) < 3:
                 indexs.append(None)
@@ -403,7 +403,7 @@ class LabelApp(QMainWindow, Ui_form):
         self.pivots.discard(index)
 
     def erase_highlight(self):
-        for index in [self.index_a, self.index_b, self.index_c]:
+        for index in (self.index_a, self.index_b, self.index_c):
             if index and index < 0:
                 self.erase_point(-index)
         self.reset_index()
