@@ -6,7 +6,7 @@ import os
 from PIL import Image
 from pydicom import dcmread, FileDataset
 from pydicom.dicomdir import DicomDir
-from PyQt5.QtCore import QBuffer, QByteArray, QIODevice, QPointF, QRectF
+from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPixmap
 from typing import Optional, Union
 
@@ -249,13 +249,10 @@ def is_on_segment(a: QPointF, b: QPointF, c: QPointF):
     return min(a.x(), b.x()) < c.x() + config.eps and c.x() < max(a.x(), b.x()) + config.eps
 
 
-def get_path_file_name(path: str):
-    return os.path.basename(path)
-
-
-def get_img_byte_array(img: QPixmap, ext: str):
-    byte_array = QByteArray()
-    buffer = QBuffer(byte_array)
-    buffer.open(QIODevice.WriteOnly)
-    img.save(buffer, ext)
-    return byte_array
+def get_cv2_img(pixmap: QPixmap):
+    img = pixmap.toImage()
+    shape = (img.height(), img.bytesPerLine() * 8 // img.depth(), 4)
+    ptr = img.bits()
+    ptr.setsize(img.byteCount())
+    cv2_img = numpy.array(ptr, numpy.uint8).reshape(shape)
+    return cv2_img[..., :3]

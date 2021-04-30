@@ -1,3 +1,4 @@
+from model import test
 from module import utils
 from module.config import config
 from module.mode import LabelMode
@@ -325,8 +326,7 @@ class LabelApp(QMainWindow, Ui_form):
         distance = config.point_width - config.eps
         index = None
         for idx, (pt, _) in self.points.items():
-            dis = utils.get_distance(point, pt)
-            if dis < distance:
+            if (dis := utils.get_distance(point, pt)) < distance:
                 distance = dis
                 index = idx
         return index
@@ -414,11 +414,10 @@ class LabelApp(QMainWindow, Ui_form):
         if evt.type() != QMouseEvent.MouseButtonPress or evt.button() != Qt.LeftButton:
             return None
         point = self.img_view.mapToScene(evt.pos())
-        index = self.get_point_index(point)
-        if not index:
-            self.add_new_point(point)
-        else:
+        if index := self.get_point_index(point):
             self.points[index] = self.points[index][0], self.color
+        else:
+            self.add_new_point(point)
         self.update_all()
 
     def handle_line_mode(self, evt: QMouseEvent):
@@ -477,9 +476,7 @@ class LabelApp(QMainWindow, Ui_form):
             if utils.get_line_key(self.index_a, self.index_b) in self.lines:
                 a = self.points[self.index_a][0]
                 b = self.points[self.index_b][0]
-                index_c = self.add_new_point(utils.get_midpoint(a, b))
-                self.add_line(self.index_a, index_c)
-                self.add_line(self.index_b, index_c)
+                self.add_new_point(utils.get_midpoint(a, b))
                 self.end_trigger_with(self.index_b)
             else:
                 self.trigger_index(self.index_a)
@@ -528,9 +525,8 @@ class LabelApp(QMainWindow, Ui_form):
         self.update_all()
 
     def handle_erase_point_mode(self, evt: QMouseEvent):
-        index = self.get_point_index(self.img_view.mapToScene(evt.pos()))
         if evt.type() == QMouseEvent.MouseButtonPress and evt.button() == Qt.LeftButton:
-            self.erase_point(index)
+            self.erase_point(self.get_point_index(self.img_view.mapToScene(evt.pos())))
         self.update_all()
 
     def handle_highlight_move(self, evt: QMouseEvent):
@@ -603,7 +599,7 @@ class LabelApp(QMainWindow, Ui_form):
         self.right_btn_menu.exec(point)
 
     def handle_right_btn_menu(self, evt: QMouseEvent):
-        if (index := self.get_point_index(self.img_view.mapToScene(evt.pos()))) != -1:
+        if index := self.get_point_index(self.img_view.mapToScene(evt.pos())):
             self.erase_highlight()
             self.highlight_move_index = index
             self.update_all()
@@ -824,9 +820,10 @@ class LabelApp(QMainWindow, Ui_form):
             self.points[index] = self.get_img_point(QPointF(x, y)), self.color
 
     def add_new_real_point(self, x: float, y: float):
-        self.add_real_point(self.get_new_index(), x, y)
+        index = self.get_new_index()
+        self.add_real_point(index, x, y)
+        return index
 
-    # TODO
     # add_real_point(index, x, y) or add_new_real_point(x, y)
     '''
     ----------> x
@@ -840,11 +837,9 @@ class LabelApp(QMainWindow, Ui_form):
         if not self.src:
             self.warning('请先新建一个项目！')
             return None
-
-        # get file_name and byte_array
-        file_name = utils.get_path_file_name(self.path)
-        byte_array = utils.get_img_byte_array(self.src, 'jpg')
-
-        # TODO: get real points and add
-
+        cv2_img = utils.get_cv2_img(self.src)
+        points = test.auto_get_points(cv2_img)
+        for point in points:
+            index = self.add_new_real_point(point[0], point[1])
+            self.add_pivots(index)
         self.update_all()
