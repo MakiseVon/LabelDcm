@@ -1,5 +1,9 @@
 import torch
 import torch.nn as nn
+import warnings
+
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def double_conv(in_channels, out_channels):
